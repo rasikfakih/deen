@@ -44,7 +44,31 @@ class SettingsCache extends Table {
   Set<Column> get primaryKey => {key};
 }
 
-@DriftDatabase(tables: [UserGoals, DailyReads, Streaks, SettingsCache])
+class Bookmarks extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get surahId => integer()();
+  IntColumn get ayahId => integer()();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  List<Set<Column>> get uniqueKeys => [
+    {surahId, ayahId},
+  ];
+}
+
+class LastRead extends Table {
+  IntColumn get id => integer().withDefault(const Constant(1))();
+  IntColumn get surahId => integer()();
+  IntColumn get ayahId => integer()();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+@DriftDatabase(
+  tables: [UserGoals, DailyReads, Streaks, SettingsCache, Bookmarks, LastRead],
+)
 class DeenDatabase extends _$DeenDatabase {
   DeenDatabase() : super(_openConnection());
 
@@ -52,7 +76,20 @@ class DeenDatabase extends _$DeenDatabase {
   DeenDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+    onCreate: (Migrator m) async {
+      await m.createAll();
+    },
+    onUpgrade: (Migrator m, int from, int to) async {
+      if (from == 1) {
+        await m.createTable(bookmarks);
+        await m.createTable(lastRead);
+      }
+    },
+  );
 
   // Helpers for repository convenience.
   Future<UserGoal?> get activeGoal => (select(
