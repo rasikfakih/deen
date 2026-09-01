@@ -1,30 +1,42 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:deen/main.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('App loads shell with bottom nav and navigates', (tester) async {
+    await tester.pumpWidget(const ProviderScope(child: DeenApp()));
+    await tester.pumpAndSettle();
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    // Home is initial location.
+    expect(find.text('Home - Coming Soon'), findsOneWidget);
+    expect(find.byType(NavigationBar), findsOneWidget);
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    // Navigate to Quran.
+    await tester.tap(find.text('Quran'));
+    await tester.pumpAndSettle();
+    expect(find.text('Quran - Coming Soon'), findsOneWidget);
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    // Navigate to Qibla.
+    await tester.tap(find.text('Qibla'));
+    await tester.pumpAndSettle();
+    expect(find.text('Qibla - Coming Soon'), findsOneWidget);
+
+    // Navigate to Tasbih.
+    await tester.tap(find.text('Tasbih'));
+    await tester.pumpAndSettle();
+    expect(find.text('Tasbih - Coming Soon'), findsOneWidget);
+
+    // Back to Home.
+    await tester.tap(find.text('Home'));
+    await tester.pumpAndSettle();
+    expect(find.text('Home - Coming Soon'), findsOneWidget);
+  });
+
+  testWidgets('AppBar titles use design system', (tester) async {
+    await tester.pumpWidget(const ProviderScope(child: DeenApp()));
+    await tester.pumpAndSettle();
+    expect(find.widgetWithText(AppBar, 'Home'), findsOneWidget);
   });
 }
