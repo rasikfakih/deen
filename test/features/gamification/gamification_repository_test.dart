@@ -275,5 +275,37 @@ void main() {
       expect(s2.currentStreak, s1.currentStreak);
       expect(s2.lastReadDate, s1.lastReadDate);
     });
+
+    test(
+      'logDhikrSession does not affect ayahsRead/minutesRead/currentStreak',
+      () async {
+        final day = DateTime(2026, 9, 1);
+        await repo.logReadingSession(minutes: 10, ayahs: 5, now: day);
+        await repo.checkAndUpdateStreak(now: day);
+        final before = await db.getDailyReadByDate(_fmt(day));
+        final streakBefore = await db.getOrCreateStreak();
+        await repo.logDhikrSession(count: 33, now: day);
+        final after = await db.getDailyReadByDate(_fmt(day));
+        final streakAfter = await db.getOrCreateStreak();
+        expect(after!.ayahsRead, before!.ayahsRead);
+        expect(after.minutesRead, before.minutesRead);
+        expect(after.hasanatEarned, before.hasanatEarned + 330);
+        expect(streakAfter.currentStreak, streakBefore.currentStreak);
+        expect(streakAfter.lastReadDate, streakBefore.lastReadDate);
+      },
+    );
+
+    test('logDhikrSession creates row with zero ayahs/minutes', () async {
+      await db.close();
+      db = DeenDatabase.forTesting(NativeDatabase.memory());
+      repo = GamificationRepository(db);
+      final day = DateTime(2026, 9, 2);
+      final read = await repo.logDhikrSession(count: 10, now: day);
+      expect(read.ayahsRead, 0);
+      expect(read.minutesRead, 0);
+      expect(read.hasanatEarned, 100);
+      final streak = await db.getOrCreateStreak();
+      expect(streak.currentStreak, 0);
+    });
   });
 }

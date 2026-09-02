@@ -13,12 +13,14 @@ class NextPrayerCard extends StatelessWidget {
     required this.prayerTime,
     required this.countdown,
     this.isLoading = false,
+    this.onViewAll,
   });
 
   final String prayerName;
   final DateTime? prayerTime;
   final String countdown;
   final bool isLoading;
+  final VoidCallback? onViewAll;
 
   @override
   Widget build(BuildContext context) {
@@ -125,6 +127,24 @@ class NextPrayerCard extends StatelessWidget {
               ),
             ),
           ),
+          if (onViewAll != null) ...[
+            const SizedBox(width: AppSpacing.spaceSM),
+            TextButton(
+              onPressed: onViewAll,
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.spaceSM,
+                ),
+                minimumSize: const Size(0, 36),
+              ),
+              child: Text(
+                'View All',
+                style: AppTypography.labelSmall.copyWith(
+                  color: AppColors.goldDark,
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );

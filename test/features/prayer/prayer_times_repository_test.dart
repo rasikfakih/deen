@@ -1,4 +1,4 @@
-import 'package:flutter_test/flutter_test.dart';
+﻿import 'package:flutter_test/flutter_test.dart';
 
 import 'package:deen/features/prayer/data/prayer_times_repository.dart';
 
@@ -13,7 +13,7 @@ void main() {
     test(
       'Scenario A: Mecca prayer times ordering and known historical sanity',
       () {
-        // Mecca (Kaaba) — 2024-03-11 corresponds to 1445 Ramadan 1
+        // Mecca (Kaaba) - 2024-03-11 corresponds to 1445 Ramadan 1
         const meccaLat = 21.3891;
         const meccaLng = 39.8579;
         final date = DateTime(2024, 3, 11);

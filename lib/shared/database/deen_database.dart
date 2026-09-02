@@ -1,4 +1,4 @@
-import 'dart:io';
+﻿import 'dart:io';
 
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
@@ -7,7 +7,7 @@ import 'package:path_provider/path_provider.dart';
 
 part 'deen_database.g.dart';
 
-/// Drift tables — v1 subset per task spec.
+/// Drift tables - v1 subset per task spec.
 /// Full v1 will later add HasanatLedger, Bookmarks, Favorites, etc.
 /// All writes are offline-first; heavy work should be run off main isolate
 /// via NativeDatabase.createInBackground where used.
@@ -72,7 +72,7 @@ class LastRead extends Table {
 class DeenDatabase extends _$DeenDatabase {
   DeenDatabase() : super(_openConnection());
 
-  /// Constructor for tests — in-memory database (fakes over mocks, DEEN 14).
+  /// Constructor for tests - in-memory database (fakes over mocks, DEEN 14).
   DeenDatabase.forTesting(super.e);
 
   @override

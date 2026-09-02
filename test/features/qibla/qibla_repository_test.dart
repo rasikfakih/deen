@@ -1,4 +1,4 @@
-import 'package:flutter_test/flutter_test.dart';
+﻿import 'package:flutter_test/flutter_test.dart';
 
 import 'package:deen/features/qibla/data/qibla_repository.dart';
 
@@ -60,7 +60,7 @@ void main() {
           const Duration(milliseconds: 100),
           onTimeout: () => null,
         );
-        // first may be null or double — just verify non-crashing.
+        // first may be null or double - just verify non-crashing.
         // ignore: unnecessary_type_check
         expect(first == null || first is double, isTrue);
       },

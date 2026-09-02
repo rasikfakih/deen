@@ -1,12 +1,12 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
-/// Design tokens — palette per DEEN_AI_CONTEXT.md Section 8.
+/// Design tokens - palette per DEEN_AI_CONTEXT.md Section 8.
 ///
 /// Gold primary #FFB030, Earth brown #874D14, Cream #F9F6F0,
 /// Text dark #1F1F1F, Dark background #121212, Surfaces dark #1E1B16.
 ///
 /// All colors are opaque and tuned for WCAG AA. Do not add new palette
-/// values without CTO review — extend via semantic aliases only.
+/// values without CTO review - extend via semantic aliases only.
 abstract final class AppColors {
   // Raw brand palette.
   static const Color gold = Color(0xFFFFB030);
@@ -28,7 +28,7 @@ abstract final class AppColors {
   static const Color surfaceDarkHighlight = Color(0xFF2A2520);
   static const Color surfaceDarkBorder = Color(0xFF3A342E);
 
-  // Semantic — light.
+  // Semantic - light.
   static const Color lightSurface = cream;
   static const Color lightOnSurface = textDark;
   static const Color lightBackground = cream;
@@ -37,7 +37,7 @@ abstract final class AppColors {
   static const Color lightOutline = Color(0xFFD9D1C2);
   static const Color lightOutlineVariant = Color(0xFFEDE7DC);
 
-  // Semantic — dark.
+  // Semantic - dark.
   static const Color darkSurface = surfaceDark;
   static const Color darkOnSurface = Color(0xFFF3EFE6);
   static const Color darkBackgroundSemantic = darkBackground;

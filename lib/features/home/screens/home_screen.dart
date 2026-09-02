@@ -1,5 +1,7 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
@@ -11,7 +13,7 @@ import '../widgets/hasanat_ticker.dart';
 import '../widgets/next_prayer_card.dart';
 import '../widgets/weekly_streak_tracker.dart';
 
-// Top-level providers for Home dashboard — keeps build pure.
+// Top-level providers for Home dashboard - keeps build pure.
 
 final greetingNameProvider = FutureProvider<String?>((ref) async {
   final db = ref.watch(deenDatabaseProvider);
@@ -83,7 +85,7 @@ DateTime _mondayOfWeek(DateTime now) {
   ).subtract(Duration(days: weekday - 1));
 }
 
-/// Premium Home Dashboard — playful layer, spacious, motivating.
+/// Premium Home Dashboard - playful layer, spacious, motivating.
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
@@ -126,7 +128,7 @@ class HomeScreen extends ConsumerWidget {
             padding: const EdgeInsets.all(AppSpacing.spaceMD),
             sliver: SliverList.list(
               children: [
-                // Greeting — SettingsCache user_name per CTO 1
+                // Greeting - SettingsCache user_name per CTO 1
                 greetingAsync.when(
                   data: (name) {
                     final displayName = (name != null && name.trim().isNotEmpty)
@@ -176,7 +178,7 @@ class HomeScreen extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: AppSpacing.spaceLG),
-                // Next Prayer Card — watches clock for live countdown
+                // Next Prayer Card - watches clock for live countdown
                 nextPrayerAsync.when(
                   data: (next) {
                     final nowClock = clockAsync.value ?? now;
@@ -185,23 +187,26 @@ class HomeScreen extends ConsumerWidget {
                       prayerName: next.name,
                       prayerTime: next.time,
                       countdown: countdown,
+                      onViewAll: () => context.push('/prayer-times'),
                     );
                   },
-                  loading: () => const NextPrayerCard(
-                    prayerName: '—',
+                  loading: () => NextPrayerCard(
+                    prayerName: '-',
                     prayerTime: null,
-                    countdown: '—',
+                    countdown: '-',
                     isLoading: true,
+                    onViewAll: () => context.push('/prayer-times'),
                   ),
-                  error: (_, _) => const NextPrayerCard(
-                    prayerName: '—',
+                  error: (_, _) => NextPrayerCard(
+                    prayerName: '-',
                     prayerTime: null,
-                    countdown: '—',
+                    countdown: '-',
                     isLoading: true,
+                    onViewAll: () => context.push('/prayer-times'),
                   ),
                 ),
                 const SizedBox(height: AppSpacing.spaceLG),
-                // Daily Goal Ring — flexible unit per CTO 2
+                // Daily Goal Ring - flexible unit per CTO 2
                 todayAsync.when(
                   data: (today) {
                     final homeData = homeDataAsync.valueOrNull;
@@ -225,7 +230,7 @@ class HomeScreen extends ConsumerWidget {
                       const DailyGoalRing(current: 0, target: 15, unit: 'min'),
                 ),
                 const SizedBox(height: AppSpacing.spaceLG),
-                // Weekly Streak Tracker — actual DailyReads per CTO 3
+                // Weekly Streak Tracker - actual DailyReads per CTO 3
                 streakAsync.when(
                   data: (streak) {
                     final homeData = homeDataAsync.valueOrNull;
@@ -249,7 +254,7 @@ class HomeScreen extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: AppSpacing.spaceLG),
-                // Hasanat Ticker — subtle scale+fade per CTO 4
+                // Hasanat Ticker - subtle scale+fade per CTO 4
                 todayAsync.when(
                   data: (today) =>
                       HasanatTicker(todayHasanat: today?.hasanatEarned ?? 0),

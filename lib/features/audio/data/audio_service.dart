@@ -1,6 +1,6 @@
-import 'package:just_audio/just_audio.dart';
+﻿import 'package:just_audio/just_audio.dart';
 
-/// Audio architecture — streaming via just_audio, R2-ready.
+/// Audio architecture - streaming via just_audio, R2-ready.
 ///
 /// Uses a single [AudioPlayer] and exposes state streams.
 /// Placeholder URL will be swapped to our Cloudflare R2 CDN later

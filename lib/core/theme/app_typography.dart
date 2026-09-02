@@ -1,11 +1,11 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 /// Typography tokens per DEEN Section 8.
 ///
-/// Latin UI — Poppins via google_fonts.
-/// Arabic UI — Tajawal (per CTO decision, geometric pairing with Poppins).
-/// Mushaf text — Amiri Quran / KFGQPC Uthman Taha (handled separately).
+/// Latin UI - Poppins via google_fonts.
+/// Arabic UI - Tajawal (per CTO decision, geometric pairing with Poppins).
+/// Mushaf text - Amiri Quran / KFGQPC Uthman Taha (handled separately).
 ///
 /// OFFLINE-FIRST NOTE (CTO decision 1):
 /// `GoogleFonts.config.allowRuntimeFetching` is set to false in main.dart.
@@ -14,7 +14,7 @@ import 'package:google_fonts/google_fonts.dart';
 /// in Session 3, google_fonts will pick them up seamlessly via pubspec
 /// font family declarations. No network on startup.
 abstract final class AppTypography {
-  // Base text style helpers — Poppins is the single source of truth for Latin.
+  // Base text style helpers - Poppins is the single source of truth for Latin.
   static TextStyle _poppins({
     required double fontSize,
     required FontWeight fontWeight,
@@ -23,7 +23,7 @@ abstract final class AppTypography {
     Color? color,
   }) {
     // google_fonts will use bundled font if declared in pubspec.yaml,
-    // otherwise falls back to system with same metrics — no network due to
+    // otherwise falls back to system with same metrics - no network due to
     // allowRuntimeFetching = false.
     return GoogleFonts.poppins(
       fontSize: fontSize,
@@ -34,7 +34,7 @@ abstract final class AppTypography {
     );
   }
 
-  // Display — heroic, use sparingly (sacred screens minimal, playful screens celebratory).
+  // Display - heroic, use sparingly (sacred screens minimal, playful screens celebratory).
   static TextStyle displayLarge = _poppins(
     fontSize: 32,
     fontWeight: FontWeight.w700,
@@ -52,7 +52,7 @@ abstract final class AppTypography {
     height: 1.3,
   );
 
-  // Headline — section headers.
+  // Headline - section headers.
   static TextStyle headlineLarge = _poppins(
     fontSize: 22,
     fontWeight: FontWeight.w600,
@@ -69,7 +69,7 @@ abstract final class AppTypography {
     height: 1.4,
   );
 
-  // Title — cards, list tiles, app bars.
+  // Title - cards, list tiles, app bars.
   static TextStyle titleLarge = _poppins(
     fontSize: 16,
     fontWeight: FontWeight.w600,
@@ -89,7 +89,7 @@ abstract final class AppTypography {
     letterSpacing: 0.1,
   );
 
-  // Body — primary reading.
+  // Body - primary reading.
   static TextStyle bodyLarge = _poppins(
     fontSize: 16,
     fontWeight: FontWeight.w400,
@@ -106,7 +106,7 @@ abstract final class AppTypography {
     height: 1.5,
   );
 
-  // Label — buttons, captions, overlines.
+  // Label - buttons, captions, overlines.
   static TextStyle labelLarge = _poppins(
     fontSize: 14,
     fontWeight: FontWeight.w600,
@@ -146,7 +146,7 @@ abstract final class AppTypography {
   );
 
   // ---------------------------------------------------------------------------
-  // Arabic placeholder — Tajawal via google_fonts. Will be bundled offline in
+  // Arabic placeholder - Tajawal via google_fonts. Will be bundled offline in
   // Session 3 (assets/fonts). For RTL later, wrap with Directionality.
   // ---------------------------------------------------------------------------
 
@@ -157,7 +157,7 @@ abstract final class AppTypography {
     double height = 1.6,
     Color? color,
   }) {
-    // Tajawal geometric — complements Poppins. Offline fallback same as above.
+    // Tajawal geometric - complements Poppins. Offline fallback same as above.
     return GoogleFonts.tajawal(
       fontSize: fontSize,
       fontWeight: fontWeight,
@@ -166,7 +166,7 @@ abstract final class AppTypography {
     );
   }
 
-  /// Arabic TextTheme variant — use when locale is ar.
+  /// Arabic TextTheme variant - use when locale is ar.
   static TextTheme get arabicTextTheme => TextTheme(
     displayLarge: arabicStyle(
       fontSize: 32,
@@ -193,5 +193,5 @@ abstract final class AppTypography {
   );
 
   // Mushaf text mode (Amiri Quran / KFGQPC) is handled at reader widget level,
-  // not here — it requires specialized line height and justification.
+  // not here - it requires specialized line height and justification.
 }

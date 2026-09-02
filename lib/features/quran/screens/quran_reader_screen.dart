@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -34,7 +34,7 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
-    // Hasanat timer — every 60s logs 1 minute + ayahs seen (sacred screen, no celebrations).
+    // Hasanat timer - every 60s logs 1 minute + ayahs seen (sacred screen, no celebrations).
     // Skip timer in widget tests to avoid pumpAndSettle timeout (Timer.periodic).
     final isTest = WidgetsBinding.instance.runtimeType.toString().contains(
       'Test',
@@ -89,7 +89,7 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> {
           ? AppColors.darkBackgroundSemantic
           : AppColors.lightBackground,
       appBar: AppBar(
-        title: const Text('Al-Quran — Text Mode'),
+        title: const Text('Al-Quran - Text Mode'),
         centerTitle: true,
         actions: [
           Consumer(
@@ -142,7 +142,7 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> {
                 ),
                 const SizedBox(height: AppSpacing.spaceMD),
                 Text(
-                  'Unable to load Quran — offline data missing',
+                  'Unable to load Quran - offline data missing',
                   style: Theme.of(context).textTheme.titleMedium,
                   textAlign: TextAlign.center,
                 ),
@@ -355,7 +355,7 @@ class _AyahCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: AppSpacing.spaceSM),
-            // Arabic — RTL, Tajawal placeholder via app_typography
+            // Arabic - RTL, Tajawal placeholder via app_typography
             Directionality(
               textDirection: TextDirection.rtl,
               child: Text(

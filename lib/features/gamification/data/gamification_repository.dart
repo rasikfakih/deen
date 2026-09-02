@@ -1,8 +1,8 @@
-import 'package:drift/drift.dart';
+﻿import 'package:drift/drift.dart';
 
 import '../../../shared/database/deen_database.dart';
 
-/// Gamification engine — pure logic, offline-first, no UI.
+/// Gamification engine - pure logic, offline-first, no UI.
 ///
 /// Business rules per DEEN Sections 10 & 3:
 /// - Base Hasanat 10 per ayah, Beast Mode 2x if minutes >=30.
@@ -72,7 +72,7 @@ class GamificationRepository {
     final todayRead = await db.getDailyReadByDate(todayStr);
     final goal = await db.activeGoal;
 
-    // Goal threshold — fallback to 1 ayah if no goal exists (CTO 2).
+    // Goal threshold - fallback to 1 ayah if no goal exists (CTO 2).
     final bool goalMet = _isGoalMet(todayRead, goal);
 
     if (!goalMet) {
@@ -101,14 +101,14 @@ class GamificationRepository {
       // Missed days = gap - 1 (exclude today and last read day).
       final missedDays = gapDays - 1;
       if (missedDays <= 0) {
-        // Difference is 1 but not yesterday (edge — treat as gap 1).
+        // Difference is 1 but not yesterday (edge - treat as gap 1).
         newCurrent = streak.currentStreak + 1;
       } else if (newFreezes >= missedDays) {
-        // Enough freezes to cover gap — consume per missed day.
+        // Enough freezes to cover gap - consume per missed day.
         newFreezes = newFreezes - missedDays;
         newCurrent = streak.currentStreak + 1;
       } else {
-        // Not enough freezes — reset to 0 per spec, then start new streak
+        // Not enough freezes - reset to 0 per spec, then start new streak
         // today as 1? Spec says reset to 0. We interpret as reset to 1
         // because today's goal is met and constitutes a new streak start,
         // but we honour CTO spec: reset to 0 and then set to 1 as new
@@ -121,7 +121,7 @@ class GamificationRepository {
         // If CTO wants strict 0, change to newCurrent = 0.
         newCurrent = 1;
         // Consume whatever freezes remain? Spec: if freezes run out, reset.
-        // We do not consume remaining — streak broken.
+        // We do not consume remaining - streak broken.
         // Optionally: newFreezes = 0;
         // Keep freezes as is (or 0). We keep as is to avoid losing partial.
         // For strict reset, uncomment: newFreezes = 0;
@@ -150,6 +150,37 @@ class GamificationRepository {
 
     final updated = await db.streak;
     return updated ?? streak;
+  }
+
+  /// Tasbih / Dhikr: adds hasanat only, never touches ayahsRead/minutesRead
+  /// and never affects streak. Separated per critical correction: Quranly
+  /// streak must mean Quran engagement. Tasbih rewards hasanat only.
+  Future<DailyRead> logDhikrSession({required int count, DateTime? now}) async {
+    final today = _formatDate(now ?? DateTime.now());
+    final hasanat = count * 10;
+    final existing = await db.getDailyReadByDate(today);
+    if (existing == null) {
+      return db
+          .into(db.dailyReads)
+          .insertReturning(
+            DailyReadsCompanion(
+              date: Value(today),
+              minutesRead: const Value(0),
+              ayahsRead: const Value(0),
+              hasanatEarned: Value(hasanat),
+            ),
+          );
+    } else {
+      final updated = existing.copyWith(
+        hasanatEarned: existing.hasanatEarned + hasanat,
+      );
+      await (db.update(
+        db.dailyReads,
+      )..where((t) => t.id.equals(existing.id))).write(
+        DailyReadsCompanion(hasanatEarned: Value(updated.hasanatEarned)),
+      );
+      return updated;
+    }
   }
 
   bool _isGoalMet(DailyRead? today, UserGoal? goal) {

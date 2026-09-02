@@ -1,10 +1,10 @@
-import 'package:geolocator/geolocator.dart';
+﻿import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-/// Never-crash location service — offline-first, privacy respecting.
+/// Never-crash location service - offline-first, privacy respecting.
 ///
 /// Returns a valid coordinate always. If permission denied or service
-/// disabled, returns the spiritual fallback — Mecca (Kaaba).
+/// disabled, returns the spiritual fallback - Mecca (Kaaba).
 /// No network call, computed on-device only (DEEN 76, 12).
 class AppLocation {
   const AppLocation(this.latitude, this.longitude);
@@ -26,14 +26,14 @@ class AppLocation {
 }
 
 class LocationService {
-  /// Spiritual fallback — Kaaba, Mecca.
+  /// Spiritual fallback - Kaaba, Mecca.
   static const AppLocation fallbackMecca = AppLocation(21.3891, 39.8579);
 
   /// Checks permission via permission_handler, then fetches via geolocator.
-  /// Never throws — always returns a location.
+  /// Never throws - always returns a location.
   Future<AppLocation> getCurrentLocation() async {
     try {
-      // Permission check — permission_handler is source of truth for UI prompt.
+      // Permission check - permission_handler is source of truth for UI prompt.
       final status = await Permission.locationWhenInUse.status;
       if (status.isDenied || status.isRestricted) {
         final requested = await Permission.locationWhenInUse.request();

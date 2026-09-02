@@ -1,9 +1,9 @@
-import 'dart:async';
+﻿import 'dart:async';
 
 import 'package:adhan/adhan.dart';
 import 'package:flutter_compass/flutter_compass.dart';
 
-/// Qibla logic — pure math + sensor stream, offline.
+/// Qibla logic - pure math + sensor stream, offline.
 ///
 /// Uses adhan Qibla for bearing (spherical math) and flutter_compass for
 /// magnetic heading. Never crashes if sensor unavailable.
@@ -23,7 +23,7 @@ class QiblaRepository {
   }
 
   /// Stream of device magnetic heading (degrees from North, 0-360).
-  /// Emits null if sensor unavailable (emulator) — UI should handle.
+  /// Emits null if sensor unavailable (emulator) - UI should handle.
   Stream<double?> getCompassHeading() {
     final events = FlutterCompass.events;
     if (events == null) {
