@@ -9,7 +9,7 @@
 
 ## Reporting a Vulnerability
 
-- Email: security@freebuff.example (placeholder -- update before public launch)
+- Email: security@rasikfakih.com (placeholder -- update before public launch)
 - Or open a **private** GitHub Security Advisory on this repository.
 
 Please include:

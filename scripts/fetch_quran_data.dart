@@ -100,7 +100,7 @@ Future<List<int>> _fetchWithFallback(
           .get(
             uri,
             headers: {
-              'User-Agent': 'Deen/1.0 (+https://github.com/freebuff/deen)',
+              'User-Agent': 'Deen/1.0 (+https://github.com/rasikfakih/deen)',
             },
           )
           .timeout(const Duration(seconds: 60));
