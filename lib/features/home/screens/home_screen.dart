@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:go_router/go_router.dart';
@@ -6,6 +6,8 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../shared/widgets/glass/deen_glass_app_bar.dart';
+import '../../../shared/widgets/glass/deen_scroll_edge_fade.dart';
 import '../../gamification/providers/gamification_providers.dart';
 import '../../prayer/providers/prayer_providers.dart';
 import '../widgets/daily_goal_ring.dart';
@@ -118,12 +120,13 @@ class HomeScreen extends ConsumerWidget {
     final homeDataAsync = ref.watch(homeDashboardProvider);
 
     return Scaffold(
+      extendBody: true,
+      extendBodyBehindAppBar: true,
       backgroundColor: isDark
           ? AppColors.darkBackgroundSemantic
           : AppColors.lightBackground,
-      appBar: AppBar(
-        title: const Text('Home'),
-        centerTitle: true,
+      appBar: DeenGlassAppBar(
+        title: 'Home',
         actions: [
           IconButton(
             icon: const Icon(Icons.settings_outlined),
@@ -134,8 +137,15 @@ class HomeScreen extends ConsumerWidget {
       ),
       body: CustomScrollView(
         slivers: [
+          const SliverToBoxAdapter(child: SizedBox(height: kToolbarHeight)),
+          const SliverToBoxAdapter(child: DeenScrollEdgeFade(isTop: true)),
           SliverPadding(
-            padding: const EdgeInsets.all(AppSpacing.spaceMD),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.spaceMD,
+              AppSpacing.spaceSM,
+              AppSpacing.spaceMD,
+              100,
+            ),
             sliver: SliverList.list(
               children: [
                 // Greeting - SettingsCache user_name per CTO 1

@@ -13,7 +13,7 @@ import '../../features/settings/screens/notification_settings.dart';
 import '../../features/settings/screens/settings_screen.dart';
 import '../../features/social/screens/family_circles_screen.dart';
 import '../../features/tasbih/screens/tasbih_screen.dart';
-import '../../shared/widgets/deen_bottom_nav.dart';
+import '../../shared/widgets/glass/deen_glass_nav_bar.dart';
 
 /// Central router - ShellRoute with Material 3 NavigationBar.
 ///
@@ -210,8 +210,9 @@ class AppShell extends StatelessWidget {
     final index = _currentIndex(location);
 
     return Scaffold(
+      extendBody: true,
       body: child,
-      bottomNavigationBar: DeenBottomNav(
+      bottomNavigationBar: DeenGlassNavBar(
         currentIndex: index,
         onTap: (tapped) {
           if (tapped == index) return;

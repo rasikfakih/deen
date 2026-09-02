@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../shared/widgets/glass/deen_glass_app_bar.dart';
 import '../providers/social_providers.dart';
 
 class FamilyCirclesScreen extends ConsumerStatefulWidget {
@@ -88,12 +89,18 @@ class _FamilyCirclesScreenState extends ConsumerState<FamilyCirclesScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
+      extendBodyBehindAppBar: true,
       backgroundColor: isDark
           ? AppColors.darkBackgroundSemantic
           : AppColors.lightBackground,
-      appBar: AppBar(title: const Text('Family Circles'), centerTitle: true),
+      appBar: const DeenGlassAppBar(title: 'Family Circles'),
       body: ListView(
-        padding: const EdgeInsets.all(AppSpacing.spaceMD),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.spaceMD,
+          kToolbarHeight + AppSpacing.spaceMD,
+          AppSpacing.spaceMD,
+          100,
+        ),
         children: [
           Text('Create a circle', style: AppTypography.titleMedium),
           const SizedBox(height: AppSpacing.spaceSM),

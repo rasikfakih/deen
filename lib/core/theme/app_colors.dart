@@ -62,6 +62,16 @@ abstract final class AppColors {
   static const Color shadowLight = Color(0x1F1F1F1F);
   static const Color shadowDark = Color(0x66000000);
 
+  // Glass tokens - translucency only for navigation layer per DEEN Section 8.1.
+  // Content cards stay opaque (white / darkSurface). Glass is nav bars only.
+  static Color get glassLight => Colors.white.withValues(alpha: 0.62);
+  static Color get glassDark => const Color(0xFF1E1B16).withValues(alpha: 0.55);
+  static Color get glassBorderLight => Colors.white.withValues(alpha: 0.18);
+  static Color get glassBorderDark => Colors.white.withValues(alpha: 0.12);
+  static const Color glassShadowLight = shadowLight;
+  static const Color glassShadowDark = shadowDark;
+  static const double glassBlurSigma = 16;
+
   // Contrast note:
   // Gold on darkBackground ~8.2:1 (AA pass). Cream on textDark ~14.5:1.
   // Dark surface #1E1B16 on cream text #F3EFE6 ~13.8:1.

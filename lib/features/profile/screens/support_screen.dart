@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../shared/widgets/glass/deen_glass_app_bar.dart';
 
 class SupportScreen extends StatelessWidget {
   const SupportScreen({super.key});
@@ -19,12 +20,18 @@ class SupportScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
+      extendBodyBehindAppBar: true,
       backgroundColor: isDark
           ? AppColors.darkBackgroundSemantic
           : AppColors.lightBackground,
-      appBar: AppBar(title: const Text('Support Deen'), centerTitle: true),
+      appBar: const DeenGlassAppBar(title: 'Support Deen'),
       body: ListView(
-        padding: const EdgeInsets.all(AppSpacing.spaceLG),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.spaceLG,
+          kToolbarHeight + AppSpacing.spaceLG,
+          AppSpacing.spaceLG,
+          100,
+        ),
         children: [
           Text(
             'Deen is 100 percent free and open source',

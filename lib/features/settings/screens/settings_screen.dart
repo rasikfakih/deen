@@ -7,6 +7,7 @@ import '../../../shared/services/notification_service.dart';
 
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../shared/widgets/glass/deen_glass_app_bar.dart';
 import '../providers/settings_providers.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -36,9 +37,15 @@ class SettingsScreen extends ConsumerWidget {
     final methodAsync = ref.watch(prayerMethodProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings'), centerTitle: true),
+      extendBodyBehindAppBar: true,
+      appBar: const DeenGlassAppBar(title: 'Settings'),
       body: ListView(
-        padding: const EdgeInsets.all(AppSpacing.spaceMD),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.spaceMD,
+          kToolbarHeight + AppSpacing.spaceMD,
+          AppSpacing.spaceMD,
+          100,
+        ),
         children: [
           Text('Appearance', style: AppTypography.titleMedium),
           const SizedBox(height: AppSpacing.spaceSM),
@@ -162,7 +169,7 @@ class SettingsScreen extends ConsumerWidget {
                     }
                   },
                 ),
-                  loading: () => const ListTile(title: Text('Loading reminder')),
+                loading: () => const ListTile(title: Text('Loading reminder')),
                 error: (_, _) =>
                     const ListTile(title: Text('Error loading reminder')),
               );
