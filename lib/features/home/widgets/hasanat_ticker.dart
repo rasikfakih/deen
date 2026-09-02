@@ -1,20 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../settings/providers/settings_providers.dart';
 
 /// Playful hasanat ticker with subtle scale+fade on value change.
 /// Includes mandatory microcopy per DEEN 3.
-class HasanatTicker extends StatelessWidget {
+class HasanatTicker extends ConsumerWidget {
   const HasanatTicker({super.key, required this.todayHasanat});
 
   final int todayHasanat;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final elderly = ref.watch(elderlyModeProvider).valueOrNull ?? false;
 
     return Container(
       width: double.infinity,
@@ -45,22 +48,29 @@ class HasanatTicker extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.spaceXS),
           // AnimatedSwitcher-like via flutter_animate keyed scale+fade
-          Text(
+          // Disabled in elderly mode per settings
+          Builder(
+            builder: (context) {
+              final text = Text(
                 '$todayHasanat',
                 key: ValueKey<int>(todayHasanat),
                 style: AppTypography.displayMedium.copyWith(
                   color: AppColors.goldDark,
                   fontWeight: FontWeight.w800,
                 ),
-              )
-              .animate(key: ValueKey<int>(todayHasanat))
-              .scale(
-                begin: const Offset(0.9, 0.9),
-                end: const Offset(1, 1),
-                duration: 420.ms,
-                curve: Curves.easeOutBack,
-              )
-              .fadeIn(duration: 300.ms, curve: Curves.easeOut),
+              );
+              if (elderly) return text;
+              return text
+                  .animate(key: ValueKey<int>(todayHasanat))
+                  .scale(
+                    begin: const Offset(0.9, 0.9),
+                    end: const Offset(1, 1),
+                    duration: 420.ms,
+                    curve: Curves.easeOutBack,
+                  )
+                  .fadeIn(duration: 300.ms, curve: Curves.easeOut);
+            },
+          ),
           const SizedBox(height: AppSpacing.spaceXS),
           Text(
             'Counts are encouragement only; true reward is with Allah.',

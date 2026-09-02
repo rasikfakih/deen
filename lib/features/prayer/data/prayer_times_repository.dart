@@ -50,6 +50,7 @@ class DeenPrayerTimes {
     required this.date,
     required this.hijriDate,
     required this.coordinates,
+    required this.calculationMethod,
     required this.fajr,
     required this.sunrise,
     required this.dhuhr,
@@ -61,6 +62,7 @@ class DeenPrayerTimes {
   final DateTime date; // Gregorian date (midnight local)
   final HijriDate hijriDate;
   final Coordinates coordinates;
+  final CalculationMethod calculationMethod;
   final DateTime fajr;
   final DateTime sunrise;
   final DateTime dhuhr;
@@ -86,9 +88,10 @@ class NextPrayer {
 }
 
 class PrayerTimesRepository {
-  /// Muslim World League + Hanafi Asr per task spec.
-  CalculationParameters _defaultParams() {
-    final params = CalculationMethod.muslim_world_league.getParameters();
+  /// Default params per task spec: Muslim World League + Hanafi Asr.
+  /// Now accepts CalculationMethod from Settings - recalculates when method changes.
+  CalculationParameters _paramsFor(CalculationMethod method) {
+    final params = method.getParameters();
     params.madhab = Madhab.hanafi;
     return params;
   }
@@ -97,16 +100,18 @@ class PrayerTimesRepository {
     required double latitude,
     required double longitude,
     required DateTime date,
+    CalculationMethod method = CalculationMethod.muslim_world_league,
   }) {
     final coords = Coordinates(latitude, longitude);
     final components = DateComponents(date.year, date.month, date.day);
-    final params = _defaultParams();
+    final params = _paramsFor(method);
     final times = PrayerTimes(coords, components, params);
     // times are in local timezone automatically via CalendarUtil
     return DeenPrayerTimes(
       date: DateTime(date.year, date.month, date.day),
       hijriDate: HijriDate.fromGregorian(date),
       coordinates: coords,
+      calculationMethod: method,
       fajr: times.fajr,
       sunrise: times.sunrise,
       dhuhr: times.dhuhr,
@@ -131,12 +136,13 @@ class PrayerTimesRepository {
         return NextPrayer(name: entry.name, time: entry.time);
       }
     }
-    // After Isha → next day Fajr
+    // After Isha → next day Fajr (preserve calculation method)
     final tomorrow = times.date.add(const Duration(days: 1));
     final nextTimes = getPrayerTimes(
       latitude: times.coordinates.latitude,
       longitude: times.coordinates.longitude,
       date: tomorrow,
+      method: times.calculationMethod,
     );
     return NextPrayer(name: 'Fajr', time: nextTimes.fajr);
   }
