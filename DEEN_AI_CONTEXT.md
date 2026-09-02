@@ -1,7 +1,7 @@
 # DEEN_AI_CONTEXT.md
 # Master engineering and product context for the Deen app
 # Maintained by: Rasik Fakih (Founder) and CTO
-# Version: 1.0
+# Version: 1.1 - Rebranded to rasikfakih (fix/rebrand)
 
 ---
 
@@ -16,7 +16,7 @@
 7. End every task with: changed file tree, commands run, decisions made, open questions.
 8. If a requirement is ambiguous, state your assumption explicitly and choose the safest option.
 9. Production quality only: null-safe, strongly typed, no dead code, no unexplained TODOs.
-10. The app must never feel AI-generated. Section 17 is law.
+10. The app must never feel synthetic. Section 17 is law.
 
 ---
 
@@ -25,10 +25,10 @@
 - Product name: Deen (working title: Deen Muslim)
 - Platforms: Android and iOS via Flutter
 - Category: Islamic lifestyle and habit-building app
-- Positioning: the habit science of Quranly plus a complete Muslim toolkit; free forever, open source, offline-first, global
+- Positioning: the habit science plus a complete Muslim toolkit; free forever, open source, offline-first, global
 - Founder and product owner: Rasik Fakih (6 years technology experience, final human reviewer)
-- Engineering loop: MiMo 2.5 implements -> CTO reviews architecture and PRs in chat -> Rasik tests on physical device -> merge
-- Package placeholder: com.freebuff.deen
+- Engineering loop: Developer implements -> CTO reviews architecture and PRs in chat -> Rasik tests on physical device -> merge
+- Package placeholder: com.rasikfakih.deen
 - Business model: none. No ads, no paywalls, no data selling. Optional Sadaqah Jariyah donation entry to cover infrastructure only.
 
 ---
@@ -51,7 +51,7 @@
 - All Quran text, translations, tafsir, duas, and hadith come from verified open sources and are stored exactly as imported.
 - Every data file has a SHA-256 checksum; builds fail if any checksum mismatches (scripts/verify_quran_integrity.dart).
 - The app displays an About and Credits screen attributing all data sources.
-- Any feature that could imply religious rulings (for example Dua Q&A) must use a curated, scholar-reviewed static dataset or links to trusted sources. Never AI-generated answers.
+- Any feature that could imply religious rulings (for example Dua Q&A) must use a curated, scholar-reviewed static dataset or links to trusted sources. Never automated answers.
 - Gamification numbers (Hasanat counts) are motivational estimates. The UI must include the microcopy: "Counts are encouragement only; true reward is with Allah."
 
 ---
@@ -255,7 +255,7 @@ P2, immediately after release:
 - main: stable only. develop: integration. feature/*: tasks. review/*: corrections.
 - Conventional commit messages.
 - No direct commits to main or develop.
-- Every MiMo task ends on a feature branch; Rasik merges after CTO review and device testing.
+- Every task ends on a feature branch; Rasik merges after CTO review and device testing.
 - Releases tagged from main with CHANGELOG entries.
 
 ---
@@ -289,7 +289,7 @@ The app must include:
 
 ---
 
-## 18. Task protocol summary for MiMo
+## 18. Task protocol summary
 
 For every task output:
 1. Changed file tree

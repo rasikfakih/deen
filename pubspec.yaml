@@ -1,5 +1,7 @@
 name: deen
-description: "A new Flutter project."
+description: "Deen - free, open-source Muslim habit app. Created by Rasik Fakih."
+homepage: https://github.com/rasikfakih/deen
+repository: https://github.com/rasikfakih/deen
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -51,6 +53,7 @@ dependencies:
   timezone: ^0.11.1
   flutter_timezone: ^5.1.0
   supabase_flutter: ^2.17.2
+  url_launcher: ^6.3.2
 
 dev_dependencies:
   flutter_test:

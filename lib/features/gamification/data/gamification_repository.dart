@@ -1,4 +1,4 @@
-﻿import 'package:drift/drift.dart';
+import 'package:drift/drift.dart';
 
 import '../../../shared/database/deen_database.dart';
 
@@ -153,7 +153,7 @@ class GamificationRepository {
   }
 
   /// Tasbih / Dhikr: adds hasanat only, never touches ayahsRead/minutesRead
-  /// and never affects streak. Separated per critical correction: Quranly
+  /// and never affects streak. Separated per critical correction: Quran
   /// streak must mean Quran engagement. Tasbih rewards hasanat only.
   Future<DailyRead> logDhikrSession({required int count, DateTime? now}) async {
     final today = _formatDate(now ?? DateTime.now());
