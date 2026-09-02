@@ -46,6 +46,7 @@ dependencies:
   permission_handler: ^13.0.1
   flutter_compass: ^0.8.1
   just_audio: ^0.10.6
+  flutter_animate: ^4.5.2
 
 dev_dependencies:
   flutter_test:
