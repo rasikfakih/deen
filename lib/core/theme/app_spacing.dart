@@ -41,4 +41,13 @@ abstract final class AppSpacing {
 
   // Tap targets (accessibility).
   static const double minTapTarget = 48.0;
+
+  // Glass metrics - single source for blur and nav geometry per DEEN 8.1.
+  static const double glassBlurSigma = 16;
+  static const double glassBorderWidth = 0.8;
+  static const double navFloatingMargin = 16;
+  static const double navRadius = 28;
+  static const double navHeight = 72;
+  static const double scrollEdgeHard = 24;
+  static const double scrollEdgeSoft = 32;
 }

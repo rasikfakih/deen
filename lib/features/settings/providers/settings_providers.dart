@@ -92,3 +92,31 @@ Future<void> savePrayerMethod(WidgetRef ref, CalculationMethod method) async {
         ),
       );
 }
+
+final dailyReminderTimeProvider = StreamProvider<TimeOfDay?>((ref) {
+  final db = ref.watch(deenDatabaseProvider);
+  return db.select(db.settingsCache).watch().map((rows) {
+    final row = rows.where((r) => r.key == 'daily_reminder_time').toList();
+    if (row.isEmpty || row.first.value == null) return null;
+    final parts = row.first.value!.split(':');
+    if (parts.length != 2) return null;
+    final h = int.tryParse(parts[0]);
+    final m = int.tryParse(parts[1]);
+    if (h == null || m == null) return null;
+    return TimeOfDay(hour: h, minute: m);
+  });
+});
+
+Future<void> saveDailyReminderTime(WidgetRef ref, TimeOfDay time) async {
+  final db = ref.read(deenDatabaseProvider);
+  final value =
+      '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+  await db
+      .into(db.settingsCache)
+      .insertOnConflictUpdate(
+        SettingsCacheCompanion.insert(
+          key: 'daily_reminder_time',
+          value: Value(value),
+        ),
+      );
+}

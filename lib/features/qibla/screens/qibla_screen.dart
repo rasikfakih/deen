@@ -1,4 +1,4 @@
-﻿import 'dart:math' as math;
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../shared/widgets/glass/deen_glass_app_bar.dart';
 import '../../prayer/providers/prayer_providers.dart';
 import '../providers/qibla_providers.dart';
 
@@ -35,10 +36,11 @@ class QiblaScreen extends ConsumerWidget {
     final locAsync = ref.watch(currentLocationProvider);
 
     return Scaffold(
+      extendBodyBehindAppBar: true,
       backgroundColor: isDark
           ? AppColors.darkBackgroundSemantic
           : AppColors.lightBackground,
-      appBar: AppBar(title: const Text('Qibla'), centerTitle: true),
+      appBar: const DeenGlassAppBar(title: 'Qibla'),
       body: qiblaAsync.when(
         data: (data) {
           final bearing = data.bearing;

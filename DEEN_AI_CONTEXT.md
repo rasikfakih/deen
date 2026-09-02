@@ -159,6 +159,17 @@ Rules:
 - Beautiful empty states and illustrations. No generic Material defaults.
 - Dark mode is a first-class theme, not an afterthought.
 
+### 8.1 Design v2: Liquid Glass
+
+- Glass on navigation layer only (bars, floating controls, sheets). Never on content lists. The Quran reader screen must remain calm with no glass over the ayah list.
+- Never stack glass on glass. Elements above a glass bar use gradient fills.
+- Regular glass variant by default. Clear variant only over media-rich content and must auto-add a dimming layer.
+- Emulate lensing with a specular top highlight and gradient edge border, not plain blur.
+- Adaptive tinting: light mode warm white tint, dark mode deep surface tint. Shadows strengthen when content scrolls beneath.
+- Elderly Mode: reduce blur sigma, disable glow and flex animations.
+- Performance: max one BackdropFilter per screen region, no nested blurs, never animate blur radius, wrap glass zones in RepaintBoundary.
+- QA: scroll edge fade heights are tokens in AppSpacing (hard 24 soft 32) and must be re-evaluated on a physical device; any change updates both AppSpacing and this section in the same commit.
+
 ---
 
 ## 9. Navigation and v1 scope

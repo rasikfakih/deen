@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../shared/widgets/glass/deen_glass_app_bar.dart';
 import '../../gamification/providers/gamification_providers.dart';
 import '../data/quran_repository.dart';
 import '../providers/quran_providers.dart';
@@ -85,12 +86,12 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
+      extendBodyBehindAppBar: true,
       backgroundColor: isDark
           ? AppColors.darkBackgroundSemantic
           : AppColors.lightBackground,
-      appBar: AppBar(
-        title: const Text('Al-Quran - Text Mode'),
-        centerTitle: true,
+      appBar: DeenGlassAppBar(
+        title: 'Al-Quran - Text Mode',
         actions: [
           Consumer(
             builder: (context, ref, _) {

@@ -1,9 +1,13 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/utils/deen_icons.dart';
+import '../../../shared/widgets/glass/deen_glass_app_bar.dart';
+import '../../../shared/widgets/glass/deen_scroll_edge_fade.dart';
 import '../providers/prayer_providers.dart';
 
 class PrayerTimesScreen extends ConsumerWidget {
@@ -24,12 +28,15 @@ class PrayerTimesScreen extends ConsumerWidget {
     final locAsync = ref.watch(currentLocationProvider);
 
     return Scaffold(
+      extendBodyBehindAppBar: true,
       backgroundColor: isDark
           ? AppColors.darkBackgroundSemantic
           : AppColors.lightBackground,
-      appBar: AppBar(title: const Text('Prayer Times'), centerTitle: true),
+      appBar: const DeenGlassAppBar(title: 'Prayer Times'),
       body: CustomScrollView(
         slivers: [
+          const SliverToBoxAdapter(child: SizedBox(height: kToolbarHeight)),
+          const SliverToBoxAdapter(child: DeenScrollEdgeFade(isTop: true)),
           SliverPadding(
             padding: const EdgeInsets.all(AppSpacing.spaceMD),
             sliver: SliverList.list(
@@ -156,6 +163,29 @@ class PrayerTimesScreen extends ConsumerWidget {
                       children: items.map((e) {
                         final isSunrise = e.name == 'Sunrise';
                         final isNext = e.name == nextName && !isSunrise;
+                        String iconAsset;
+                        switch (e.name) {
+                          case 'Fajr':
+                            iconAsset = DeenIcons.ic_fajr;
+                            break;
+                          case 'Sunrise':
+                            iconAsset = DeenIcons.ic_sunrise;
+                            break;
+                          case 'Dhuhr':
+                            iconAsset = DeenIcons.ic_dhuhr;
+                            break;
+                          case 'Asr':
+                            iconAsset = DeenIcons.ic_asr;
+                            break;
+                          case 'Maghrib':
+                            iconAsset = DeenIcons.ic_maghrib;
+                            break;
+                          case 'Isha':
+                            iconAsset = DeenIcons.ic_isha;
+                            break;
+                          default:
+                            iconAsset = DeenIcons.ic_clock;
+                        }
                         return Container(
                           margin: const EdgeInsets.only(
                             bottom: AppSpacing.spaceSM,
@@ -191,14 +221,16 @@ class PrayerTimesScreen extends ConsumerWidget {
                           ),
                           child: Row(
                             children: [
-                              Icon(
-                                isSunrise
-                                    ? Icons.wb_twilight
-                                    : Icons.access_time,
-                                color: isNext
-                                    ? AppColors.goldDark
-                                    : AppColors.textMuted,
-                                size: 20,
+                              SvgPicture.asset(
+                                iconAsset,
+                                width: 20,
+                                height: 20,
+                                colorFilter: ColorFilter.mode(
+                                  isNext
+                                      ? AppColors.goldDark
+                                      : AppColors.textMuted,
+                                  BlendMode.srcIn,
+                                ),
                               ),
                               const SizedBox(width: AppSpacing.spaceMD),
                               Expanded(

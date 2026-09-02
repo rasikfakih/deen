@@ -4,8 +4,10 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_gradients.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../shared/widgets/glass/deen_glass_app_bar.dart';
 import '../../gamification/providers/gamification_providers.dart';
 import '../../settings/providers/settings_providers.dart';
 
@@ -26,10 +28,11 @@ class TasbihScreen extends ConsumerWidget {
     final progress = target == 0 ? 0.0 : (count / target).clamp(0.0, 1.0);
 
     return Scaffold(
+      extendBodyBehindAppBar: true,
       backgroundColor: isDark
           ? AppColors.darkBackgroundSemantic
           : AppColors.lightBackground,
-      appBar: AppBar(title: const Text('Tasbih'), centerTitle: true),
+      appBar: const DeenGlassAppBar(title: 'Tasbih'),
       body: Padding(
         padding: const EdgeInsets.all(AppSpacing.spaceMD),
         child: Column(
@@ -135,11 +138,13 @@ class TasbihScreen extends ConsumerWidget {
                     height: 200,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: AppColors.gold,
+                      gradient: AppGradients.goldFlow,
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.gold.withValues(alpha: 0.32),
-                          blurRadius: 18,
+                          color: elderly
+                              ? Colors.black.withValues(alpha: 0.12)
+                              : AppColors.gold.withValues(alpha: 0.32),
+                          blurRadius: elderly ? 8 : 18,
                           offset: const Offset(0, 6),
                         ),
                       ],

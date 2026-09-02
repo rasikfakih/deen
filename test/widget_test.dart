@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:deen/features/onboarding/providers/onboarding_providers.dart';
 import 'package:deen/main.dart';
+import 'package:deen/shared/widgets/glass/deen_glass_nav_bar.dart';
 
 void main() {
   testWidgets('App loads shell with bottom nav and navigates', (tester) async {
@@ -22,7 +23,7 @@ void main() {
 
     // Home is initial location - premium dashboard (CustomScrollView).
     expect(find.byType(CustomScrollView), findsOneWidget);
-    expect(find.byType(NavigationBar), findsOneWidget);
+    expect(find.byType(DeenGlassNavBar), findsOneWidget);
 
     // Navigate to Quran reader (text mode).
     await tester.tap(find.text('Quran'));

@@ -1,14 +1,18 @@
-﻿import 'dart:math' as math;
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_gradients.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../settings/providers/settings_providers.dart';
 
-/// Playful progress ring - CustomPainter, Gold fill, glowing shadow.
+/// Playful progress ring - CustomPainter, Gold flow gradient, glowing shadow.
 /// Flexible for minutes or ayahs via [unit] (e.g., "min", "ayahs").
-class DailyGoalRing extends StatelessWidget {
+/// Cards stay solid surfaces (no glass on content).
+class DailyGoalRing extends ConsumerWidget {
   const DailyGoalRing({
     super.key,
     required this.current,
@@ -21,10 +25,11 @@ class DailyGoalRing extends StatelessWidget {
   final String unit;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final progress = target <= 0 ? 0.0 : (current / target).clamp(0.0, 1.0);
     final percent = (progress * 100).round();
+    final elderly = ref.watch(elderlyModeProvider).valueOrNull ?? false;
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.spaceMD),
@@ -59,7 +64,11 @@ class DailyGoalRing extends StatelessWidget {
             width: 140,
             height: 140,
             child: CustomPaint(
-              painter: _RingPainter(progress: progress, isDark: isDark),
+              painter: _RingPainter(
+                progress: progress,
+                isDark: isDark,
+                isElderly: elderly,
+              ),
               child: Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -109,10 +118,15 @@ class DailyGoalRing extends StatelessWidget {
 }
 
 class _RingPainter extends CustomPainter {
-  _RingPainter({required this.progress, required this.isDark});
+  _RingPainter({
+    required this.progress,
+    required this.isDark,
+    required this.isElderly,
+  });
 
   final double progress;
   final bool isDark;
+  final bool isElderly;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -132,38 +146,37 @@ class _RingPainter extends CustomPainter {
 
     if (progress <= 0) return;
 
-    // Glow shadow when progress > 0
-    final glowPaint = Paint()
-      ..color = AppColors.gold.withValues(alpha: 0.28)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth + 6
-      ..strokeCap = StrokeCap.round
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
-    canvas.drawArc(
-      Rect.fromCircle(center: center, radius: radius),
-      startAngle,
-      sweep,
-      false,
-      glowPaint,
-    );
+    // Glow shadow when progress > 0, disabled in Elderly Mode
+    if (!isElderly) {
+      final glowPaint = Paint()
+        ..color = AppColors.gold.withValues(alpha: 0.28)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = strokeWidth + 6
+        ..strokeCap = StrokeCap.round
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
+      canvas.drawArc(
+        Rect.fromCircle(center: center, radius: radius),
+        startAngle,
+        sweep,
+        false,
+        glowPaint,
+      );
+    }
 
-    // Filled Gold arc
+    // Filled Gold flow gradient arc
+    final rect = Rect.fromCircle(center: center, radius: radius);
     final fillPaint = Paint()
-      ..color = AppColors.gold
+      ..shader = AppGradients.goldFlow.createShader(rect)
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeWidth
       ..strokeCap = StrokeCap.round;
-    canvas.drawArc(
-      Rect.fromCircle(center: center, radius: radius),
-      startAngle,
-      sweep,
-      false,
-      fillPaint,
-    );
+    canvas.drawArc(rect, startAngle, sweep, false, fillPaint);
   }
 
   @override
   bool shouldRepaint(covariant _RingPainter oldDelegate) {
-    return oldDelegate.progress != progress || oldDelegate.isDark != isDark;
+    return oldDelegate.progress != progress ||
+        oldDelegate.isDark != isDark ||
+        oldDelegate.isElderly != isElderly;
   }
 }
