@@ -6,8 +6,10 @@ import '../../features/home/screens/home_screen.dart';
 import '../../features/onboarding/providers/onboarding_providers.dart';
 import '../../features/onboarding/screens/onboarding_screen.dart';
 import '../../features/prayer/screens/prayer_times_screen.dart';
+import '../../features/profile/screens/support_screen.dart';
 import '../../features/qibla/screens/qibla_screen.dart';
 import '../../features/quran/screens/quran_reader_screen.dart';
+import '../../features/settings/screens/notification_settings.dart';
 import '../../features/settings/screens/settings_screen.dart';
 import '../../features/social/screens/family_circles_screen.dart';
 import '../../features/tasbih/screens/tasbih_screen.dart';
@@ -48,6 +50,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/family-circles',
         name: 'familyCircles',
         builder: (context, state) => const FamilyCirclesScreen(),
+      ),
+      GoRoute(
+        path: '/support',
+        name: 'support',
+        builder: (context, state) => const SupportScreen(),
+      ),
+      GoRoute(
+        path: '/notifications',
+        name: 'notifications',
+        builder: (context, state) => const NotificationSettingsScreen(),
       ),
       ShellRoute(
         builder: (context, state, child) {
@@ -115,6 +127,16 @@ final GoRouter appRouter = GoRouter(
       path: '/family-circles',
       name: 'familyCircles',
       builder: (context, state) => const FamilyCirclesScreen(),
+    ),
+    GoRoute(
+      path: '/support',
+      name: 'support',
+      builder: (context, state) => const SupportScreen(),
+    ),
+    GoRoute(
+      path: '/notifications',
+      name: 'notifications',
+      builder: (context, state) => const NotificationSettingsScreen(),
     ),
     ShellRoute(
       builder: (context, state, child) {

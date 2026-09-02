@@ -1,16 +1,30 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:timezone/data/latest.dart' as tz_data;
+import 'package:timezone/timezone.dart' as tz;
 
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'features/settings/providers/settings_providers.dart';
-import 'features/social/providers/social_providers.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   GoogleFonts.config.allowRuntimeFetching = false;
+  tz_data.initializeTimeZones();
+  unawaited(
+    FlutterTimezone.getLocalTimezone()
+        .then((info) {
+          try {
+            tz.setLocalLocation(tz.getLocation(info.identifier));
+          } catch (_) {}
+        })
+        .timeout(const Duration(milliseconds: 500), onTimeout: () {}),
+  );
 
   const supabaseUrl = String.fromEnvironment(
     'SUPABASE_URL',
@@ -46,8 +60,6 @@ class DeenApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Activate auto-sync on auth upgrade (Guest -> Email)
-    ref.watch(autoSyncProvider);
     final themeModeAsync = ref.watch(themeModeProvider);
     final elderlyAsync = ref.watch(elderlyModeProvider);
     final router = ref.watch(appRouterProvider);

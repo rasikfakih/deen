@@ -1,6 +1,9 @@
 import 'package:adhan/adhan.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../shared/services/notification_service.dart';
 
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
@@ -124,11 +127,66 @@ class SettingsScreen extends ConsumerWidget {
             style: AppTypography.bodySmall,
           ),
           const SizedBox(height: AppSpacing.spaceXL),
+          Text('Reminders', style: AppTypography.titleMedium),
+          const SizedBox(height: AppSpacing.spaceSM),
+          Consumer(
+            builder: (context, ref, _) {
+              final timeAsync = ref.watch(dailyReminderTimeProvider);
+              return timeAsync.when(
+                data: (time) => ListTile(
+                  title: Text(
+                    time == null
+                        ? 'Daily reading reminder'
+                        : 'Daily reminder at ${time.format(context)}',
+                  ),
+                  subtitle: const Text('Tap to pick time'),
+                  trailing: const Icon(Icons.access_time),
+                  onTap: () async {
+                    final picked = await showTimePicker(
+                      context: context,
+                      initialTime: time ?? const TimeOfDay(hour: 8, minute: 0),
+                    );
+                    if (picked != null) {
+                      await saveDailyReminderTime(ref, picked);
+                      await NotificationService.instance
+                          .scheduleDailyReadingReminder(picked);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Reminder set for ${picked.format(context)}',
+                            ),
+                          ),
+                        );
+                      }
+                    }
+                  },
+                ),
+                  loading: () => const ListTile(title: Text('Loading reminder')),
+                error: (_, _) =>
+                    const ListTile(title: Text('Error loading reminder')),
+              );
+            },
+          ),
+          TextButton(
+            onPressed: () => context.push('/notifications'),
+            child: const Text('Open Notification Settings'),
+          ),
+          const SizedBox(height: AppSpacing.spaceXL),
           Text('About', style: AppTypography.titleMedium),
           const SizedBox(height: AppSpacing.spaceSM),
           Text(
             'Deen is free forever, no ads, offline first. Your data stays on your device.',
             style: AppTypography.bodySmall,
+          ),
+          const SizedBox(height: AppSpacing.spaceLG),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () => context.push('/support'),
+              icon: const Icon(Icons.favorite_border),
+              label: const Text('Support the App'),
+            ),
           ),
         ],
       ),
