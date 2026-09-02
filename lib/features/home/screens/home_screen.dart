@@ -271,6 +271,15 @@ class HomeScreen extends ConsumerWidget {
                   loading: () => const HasanatTicker(todayHasanat: 0),
                   error: (_, _) => const HasanatTicker(todayHasanat: 0),
                 ),
+                const SizedBox(height: AppSpacing.spaceLG),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () => context.push('/family-circles'),
+                    icon: const Icon(Icons.group_outlined),
+                    label: const Text('Family Circles'),
+                  ),
+                ),
                 const SizedBox(height: AppSpacing.spaceXL),
               ],
             ),

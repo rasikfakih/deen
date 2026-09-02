@@ -9,6 +9,7 @@ import '../../features/prayer/screens/prayer_times_screen.dart';
 import '../../features/qibla/screens/qibla_screen.dart';
 import '../../features/quran/screens/quran_reader_screen.dart';
 import '../../features/settings/screens/settings_screen.dart';
+import '../../features/social/screens/family_circles_screen.dart';
 import '../../features/tasbih/screens/tasbih_screen.dart';
 import '../../shared/widgets/deen_bottom_nav.dart';
 
@@ -42,6 +43,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/settings',
         name: 'settings',
         builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: '/family-circles',
+        name: 'familyCircles',
+        builder: (context, state) => const FamilyCirclesScreen(),
       ),
       ShellRoute(
         builder: (context, state, child) {
@@ -104,6 +110,11 @@ final GoRouter appRouter = GoRouter(
       path: '/settings',
       name: 'settings',
       builder: (context, state) => const SettingsScreen(),
+    ),
+    GoRoute(
+      path: '/family-circles',
+      name: 'familyCircles',
+      builder: (context, state) => const FamilyCirclesScreen(),
     ),
     ShellRoute(
       builder: (context, state, child) {
