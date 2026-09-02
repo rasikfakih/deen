@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,6 +7,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../gamification/providers/gamification_providers.dart';
+import '../../settings/providers/settings_providers.dart';
 
 final tasbihCountProvider = StateProvider<int>((ref) => 0);
 final tasbihTargetProvider = StateProvider<int>((ref) => 33);
@@ -21,6 +22,7 @@ class TasbihScreen extends ConsumerWidget {
     final count = ref.watch(tasbihCountProvider);
     final target = ref.watch(tasbihTargetProvider);
     final rounds = ref.watch(tasbihRoundsProvider);
+    final elderly = ref.watch(elderlyModeProvider).valueOrNull ?? false;
     final progress = target == 0 ? 0.0 : (count / target).clamp(0.0, 1.0);
 
     return Scaffold(
@@ -58,7 +60,9 @@ class TasbihScreen extends ConsumerWidget {
             ),
             const SizedBox(height: AppSpacing.spaceLG),
             // Progress ring reuse style
-            Text(
+            Builder(
+              builder: (context) {
+                final text = Text(
                   '$count',
                   key: ValueKey<int>(count),
                   style: AppTypography.displayLarge.copyWith(
@@ -67,15 +71,19 @@ class TasbihScreen extends ConsumerWidget {
                         : AppColors.textDark,
                     fontWeight: FontWeight.w800,
                   ),
-                )
-                .animate(key: ValueKey<int>(count))
-                .scale(
-                  begin: const Offset(0.9, 0.9),
-                  end: const Offset(1, 1),
-                  duration: 220.ms,
-                  curve: Curves.easeOutBack,
-                )
-                .fadeIn(duration: 180.ms),
+                );
+                if (elderly) return text;
+                return text
+                    .animate(key: ValueKey<int>(count))
+                    .scale(
+                      begin: const Offset(0.9, 0.9),
+                      end: const Offset(1, 1),
+                      duration: 220.ms,
+                      curve: Curves.easeOutBack,
+                    )
+                    .fadeIn(duration: 180.ms);
+              },
+            ),
             const SizedBox(height: AppSpacing.spaceXS),
             Text(
               'Rounds: $rounds',
@@ -96,7 +104,7 @@ class TasbihScreen extends ConsumerWidget {
             // Large tap target
             GestureDetector(
               onTap: () async {
-                HapticFeedback.lightImpact();
+                if (!elderly) HapticFeedback.lightImpact();
                 final current = ref.read(tasbihCountProvider.notifier).state;
                 final tgt = ref.read(tasbihTargetProvider);
                 final newCount = current + 1;
@@ -120,27 +128,36 @@ class TasbihScreen extends ConsumerWidget {
                   ref.read(tasbihCountProvider.notifier).state = newCount;
                 }
               },
-              child: Container(
-                width: 200,
-                height: 200,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.gold,
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.gold.withValues(alpha: 0.32),
-                      blurRadius: 18,
-                      offset: const Offset(0, 6),
+              child: Builder(
+                builder: (context) {
+                  final circle = Container(
+                    width: 200,
+                    height: 200,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppColors.gold,
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.gold.withValues(alpha: 0.32),
+                          blurRadius: 18,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-                child: const Icon(
-                  Icons.touch_app,
-                  size: 64,
-                  color: Colors.white,
-                ),
+                    child: const Icon(
+                      Icons.touch_app,
+                      size: 64,
+                      color: Colors.white,
+                    ),
+                  );
+                  if (elderly) return circle;
+                  return circle.animate().scale(
+                    duration: 300.ms,
+                    curve: Curves.easeOut,
+                  );
+                },
               ),
-            ).animate().scale(duration: 300.ms, curve: Curves.easeOut),
+            ),
             const Spacer(),
             Text(
               'Tap the circle to count',

@@ -1,9 +1,11 @@
-﻿import 'dart:async';
+import 'dart:async';
 
+import 'package:adhan/adhan.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/location_service.dart';
 import '../data/prayer_times_repository.dart';
+import '../../settings/providers/settings_providers.dart';
 
 // Repositories
 final locationServiceProvider = Provider<LocationService>(
@@ -36,18 +38,22 @@ final currentLocationProvider = FutureProvider<AppLocation>((ref) async {
   return service.getCurrentLocation();
 });
 
-/// Today's prayer times - depends on location, offline via adhan.
-/// Invalidate at midnight to fetch new day (handled via clock watch).
+/// Today's prayer times - depends on location, method, offline via adhan.
+/// Invalidate at midnight or when calculation method changes.
 final prayerTimesProvider = FutureProvider<DeenPrayerTimes>((ref) async {
   final location = await ref.watch(currentLocationProvider.future);
   // Watch clock to auto-refresh at midnight - rebuild when date changes.
   final clockAsync = ref.watch(clockProvider);
   final now = clockAsync.value ?? DateTime.now();
+  final methodAsync = ref.watch(prayerMethodProvider);
+  final method =
+      methodAsync.valueOrNull ?? CalculationMethod.muslim_world_league;
   final repo = ref.watch(prayerTimesRepositoryProvider);
   return repo.getPrayerTimes(
     latitude: location.latitude,
     longitude: location.longitude,
     date: DateTime(now.year, now.month, now.day),
+    method: method,
   );
 });
 

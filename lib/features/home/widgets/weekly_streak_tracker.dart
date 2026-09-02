@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../settings/providers/settings_providers.dart';
 
 /// Horizontal 7-pill tracker Mon→Sun.
 /// Gold filled if completed for that date; today incomplete pulses via flutter_animate.
-class WeeklyStreakTracker extends StatelessWidget {
+class WeeklyStreakTracker extends ConsumerWidget {
   const WeeklyStreakTracker({
     super.key,
     required this.currentStreak,
@@ -27,8 +29,9 @@ class WeeklyStreakTracker extends StatelessWidget {
   static const _labels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final elderly = ref.watch(elderlyModeProvider).valueOrNull ?? false;
     assert(completedByWeekday.length == 7, 'completedByWeekday must be 7');
 
     return Container(
@@ -69,7 +72,7 @@ class WeeklyStreakTracker extends StatelessWidget {
               ),
               const Spacer(),
               Text(
-                currentStreak >= 7 ? '🔥 on fire!' : 'keep it alive',
+                currentStreak >= 7 ? 'on fire!' : 'keep it alive',
                 style: AppTypography.labelSmall.copyWith(
                   color: AppColors.textMuted,
                 ),
@@ -118,7 +121,7 @@ class WeeklyStreakTracker extends StatelessWidget {
                 ),
               );
 
-              if (shouldPulse) {
+              if (shouldPulse && !elderly) {
                 pill = pill
                     .animate(onPlay: (c) => c.repeat(reverse: true))
                     .scale(

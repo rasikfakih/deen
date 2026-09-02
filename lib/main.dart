@@ -4,28 +4,41 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'features/settings/providers/settings_providers.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  // Offline-first: do not fetch fonts at runtime (DEEN Section 6/8).
-  // Poppins/Tajawal will be bundled as assets in Session 3; google_fonts
-  // will then resolve locally. System fallback is acceptable until then.
   GoogleFonts.config.allowRuntimeFetching = false;
   runApp(const ProviderScope(child: DeenApp()));
 }
 
-class DeenApp extends StatelessWidget {
+class DeenApp extends ConsumerWidget {
   const DeenApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final themeModeAsync = ref.watch(themeModeProvider);
+    final elderlyAsync = ref.watch(elderlyModeProvider);
+    final router = ref.watch(appRouterProvider);
+
+    final themeMode = themeModeAsync.valueOrNull ?? ThemeMode.system;
+    final isElderly = elderlyAsync.valueOrNull ?? false;
+    final textScale = isElderly ? 1.2 : 1.0;
+
     return MaterialApp.router(
       title: 'Deen',
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system,
-      routerConfig: appRouter,
+      themeMode: themeMode,
+      routerConfig: router,
       debugShowCheckedModeBanner: false,
+      builder: (context, child) {
+        return MediaQuery(
+          data: MediaQuery.of(context)
+              .copyWith(textScaler: TextScaler.linear(textScale)),
+          child: child!,
+        );
+      },
     );
   }
 }

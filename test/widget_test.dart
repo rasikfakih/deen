@@ -1,19 +1,22 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:deen/core/router/app_router.dart';
+import 'package:deen/features/onboarding/providers/onboarding_providers.dart';
 import 'package:deen/main.dart';
 
 void main() {
-  setUp(() {
-    // Reset global router between tests (singleton retains location).
-    appRouter.go('/home');
-  });
-
   testWidgets('App loads shell with bottom nav and navigates', (tester) async {
-    appRouter.go('/home');
-    await tester.pumpWidget(const ProviderScope(child: DeenApp()));
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          hasCompletedOnboardingProvider.overrideWith(
+            (ref) => Stream.value(true),
+          ),
+        ],
+        child: const DeenApp(),
+      ),
+    );
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 200));
 
@@ -53,8 +56,16 @@ void main() {
   });
 
   testWidgets('AppBar titles use design system', (tester) async {
-    appRouter.go('/home');
-    await tester.pumpWidget(const ProviderScope(child: DeenApp()));
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          hasCompletedOnboardingProvider.overrideWith(
+            (ref) => Stream.value(true),
+          ),
+        ],
+        child: const DeenApp(),
+      ),
+    );
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 200));
     expect(find.widgetWithText(AppBar, 'Home'), findsOneWidget);
