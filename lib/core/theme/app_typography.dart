@@ -1,18 +1,14 @@
-﻿import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter/material.dart';
 
 /// Typography tokens per DEEN Section 8.
 ///
-/// Latin UI - Poppins via google_fonts.
-/// Arabic UI - Tajawal (per CTO decision, geometric pairing with Poppins).
+/// Latin UI - Poppins bundled via assets/fonts with OFL.
+/// Arabic UI - Tajawal bundled via assets/fonts.
 /// Mushaf text - Amiri Quran / KFGQPC Uthman Taha (handled separately).
 ///
-/// OFFLINE-FIRST NOTE (CTO decision 1):
-/// `GoogleFonts.config.allowRuntimeFetching` is set to false in main.dart.
-/// System fallback is acceptable for this placeholder shell. When
-/// `assets/fonts/Poppins-*.ttf` + `assets/fonts/Tajawal-*.ttf` are bundled
-/// in Session 3, google_fonts will pick them up seamlessly via pubspec
-/// font family declarations. No network on startup.
+/// Fonts are declared in pubspec.yaml and bundled as assets. If the
+/// placeholder TTF files have not yet been replaced with real OFL files,
+/// Flutter will safely fallback to system fonts without crashing.
 abstract final class AppTypography {
   // Base text style helpers - Poppins is the single source of truth for Latin.
   static TextStyle _poppins({
@@ -22,10 +18,8 @@ abstract final class AppTypography {
     double letterSpacing = 0,
     Color? color,
   }) {
-    // google_fonts will use bundled font if declared in pubspec.yaml,
-    // otherwise falls back to system with same metrics - no network due to
-    // allowRuntimeFetching = false.
-    return GoogleFonts.poppins(
+    return TextStyle(
+      fontFamily: 'Poppins',
       fontSize: fontSize,
       fontWeight: fontWeight,
       height: height,
@@ -146,8 +140,7 @@ abstract final class AppTypography {
   );
 
   // ---------------------------------------------------------------------------
-  // Arabic placeholder - Tajawal via google_fonts. Will be bundled offline in
-  // Session 3 (assets/fonts). For RTL later, wrap with Directionality.
+  // Arabic - Tajawal bundled via assets/fonts. For RTL later, wrap with Directionality.
   // ---------------------------------------------------------------------------
 
   /// Returns a Tajawal style for Arabic UI labels. Pair with Poppins metrics.
@@ -157,8 +150,8 @@ abstract final class AppTypography {
     double height = 1.6,
     Color? color,
   }) {
-    // Tajawal geometric - complements Poppins. Offline fallback same as above.
-    return GoogleFonts.tajawal(
+    return TextStyle(
+      fontFamily: 'Tajawal',
       fontSize: fontSize,
       fontWeight: fontWeight,
       height: height,

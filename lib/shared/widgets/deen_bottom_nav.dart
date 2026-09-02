@@ -1,8 +1,12 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+
+import '../../core/theme/app_colors.dart';
 
 /// Material 3 NavigationBar - heavily themed via [AppTheme.navigationBarTheme].
 ///
 /// Gold indicator, surface background, proper text styles.
+/// Uses minimalist geometric SVG icons instead of Material Icons.
 /// This wrapper exists to keep routing logic out of [AppShell] and to
 /// provide a single place for analytics / accessibility hooks later.
 class DeenBottomNav extends StatelessWidget {
@@ -17,33 +21,79 @@ class DeenBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final unselectedColor = isDark
+        ? const Color(0xFF9E9589)
+        : AppColors.textMuted;
+    final selectedColor = isDark ? AppColors.textDark : AppColors.textDark;
+
     // NavigationBar is themed globally in AppTheme.lightTheme/darkTheme.
     // Here we only supply destinations and selection state.
     return NavigationBar(
       selectedIndex: currentIndex,
       onDestinationSelected: onTap,
-      destinations: const [
+      destinations: [
         NavigationDestination(
-          icon: Icon(Icons.home_outlined),
-          selectedIcon: Icon(Icons.home),
+          icon: SvgPicture.asset(
+            'assets/icons/home.svg',
+            width: 24,
+            height: 24,
+            colorFilter: ColorFilter.mode(unselectedColor, BlendMode.srcIn),
+          ),
+          selectedIcon: SvgPicture.asset(
+            'assets/icons/home.svg',
+            width: 24,
+            height: 24,
+            colorFilter: ColorFilter.mode(selectedColor, BlendMode.srcIn),
+          ),
           label: 'Home',
           tooltip: 'Home',
         ),
         NavigationDestination(
-          icon: Icon(Icons.menu_book_outlined),
-          selectedIcon: Icon(Icons.menu_book),
+          icon: SvgPicture.asset(
+            'assets/icons/quran.svg',
+            width: 24,
+            height: 24,
+            colorFilter: ColorFilter.mode(unselectedColor, BlendMode.srcIn),
+          ),
+          selectedIcon: SvgPicture.asset(
+            'assets/icons/quran.svg',
+            width: 24,
+            height: 24,
+            colorFilter: ColorFilter.mode(selectedColor, BlendMode.srcIn),
+          ),
           label: 'Quran',
           tooltip: 'Quran',
         ),
         NavigationDestination(
-          icon: Icon(Icons.explore_outlined),
-          selectedIcon: Icon(Icons.explore),
+          icon: SvgPicture.asset(
+            'assets/icons/qibla.svg',
+            width: 24,
+            height: 24,
+            colorFilter: ColorFilter.mode(unselectedColor, BlendMode.srcIn),
+          ),
+          selectedIcon: SvgPicture.asset(
+            'assets/icons/qibla.svg',
+            width: 24,
+            height: 24,
+            colorFilter: ColorFilter.mode(selectedColor, BlendMode.srcIn),
+          ),
           label: 'Qibla',
           tooltip: 'Qibla',
         ),
         NavigationDestination(
-          icon: Icon(Icons.circle_outlined),
-          selectedIcon: Icon(Icons.circle),
+          icon: SvgPicture.asset(
+            'assets/icons/tasbih.svg',
+            width: 24,
+            height: 24,
+            colorFilter: ColorFilter.mode(unselectedColor, BlendMode.srcIn),
+          ),
+          selectedIcon: SvgPicture.asset(
+            'assets/icons/tasbih.svg',
+            width: 24,
+            height: 24,
+            colorFilter: ColorFilter.mode(selectedColor, BlendMode.srcIn),
+          ),
           label: 'Tasbih',
           tooltip: 'Tasbih',
         ),

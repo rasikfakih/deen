@@ -51,6 +51,8 @@ dependencies:
   timezone: ^0.11.1
   flutter_timezone: ^5.1.0
   supabase_flutter: ^2.17.2
+  flutter_svg: ^2.3.0
+  url_launcher: ^6.3.2
 
 dev_dependencies:
   flutter_test:
@@ -66,6 +68,8 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   drift_dev: ^2.34.5
   build_runner: ^2.16.0
+  flutter_launcher_icons: ^0.14.4
+  flutter_native_splash: ^2.4.8
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -81,7 +85,29 @@ flutter:
   assets:
     - assets/data/
     - assets/data/raw/
+    - assets/icons/
+    - assets/images/
+    - assets/fonts/
 
+  fonts:
+    - family: Poppins
+      fonts:
+        - asset: assets/fonts/Poppins-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Poppins-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Poppins-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Poppins-Bold.ttf
+          weight: 700
+    - family: Tajawal
+      fonts:
+        - asset: assets/fonts/Tajawal-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Tajawal-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Tajawal-Bold.ttf
+          weight: 700
 
   # To add assets to your application, add an assets section, like this:
   # assets:
@@ -113,3 +139,24 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/icon.png"
+  min_sdk_android: 21
+  web:
+    generate: true
+    image_path: "assets/icon.png"
+    background_color: "#F9F6F0"
+    theme_color: "#FFB030"
+
+flutter_native_splash:
+  color: "#F9F6F0"
+  color_dark: "#121212"
+  image: "assets/icon.png"
+  android_12:
+    color: "#F9F6F0"
+    color_dark: "#121212"
+    image: "assets/icon.png"
+    icon_background_color: "#FFB030"
