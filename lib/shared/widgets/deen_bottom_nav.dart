@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
-/// Material 3 NavigationBar — heavily themed via [AppTheme.navigationBarTheme].
+/// Material 3 NavigationBar - heavily themed via [AppTheme.navigationBarTheme].
 ///
 /// Gold indicator, surface background, proper text styles.
 /// This wrapper exists to keep routing logic out of [AppShell] and to

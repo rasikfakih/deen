@@ -1,4 +1,4 @@
-import 'dart:math' as math;
+﻿import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
@@ -6,7 +6,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 
-/// Playful progress ring — CustomPainter, Gold fill, glowing shadow.
+/// Playful progress ring - CustomPainter, Gold fill, glowing shadow.
 /// Flexible for minutes or ayahs via [unit] (e.g., "min", "ayahs").
 class DailyGoalRing extends StatelessWidget {
   const DailyGoalRing({
@@ -97,7 +97,7 @@ class DailyGoalRing extends StatelessWidget {
           const SizedBox(height: AppSpacing.spaceSM),
           Text(
             progress >= 1.0
-                ? 'Goal completed — mashaAllah!'
+                ? 'Goal completed - mashaAllah!'
                 : 'Keep going, you’ve got this',
             style: AppTypography.bodySmall.copyWith(color: AppColors.textMuted),
             textAlign: TextAlign.center,
@@ -122,7 +122,7 @@ class _RingPainter extends CustomPainter {
     const startAngle = -math.pi / 2;
     final sweep = 2 * math.pi * progress;
 
-    // Track — muted cream / dark variant
+    // Track - muted cream / dark variant
     final trackPaint = Paint()
       ..color = isDark ? AppColors.darkOutlineVariant : AppColors.creamDark
       ..style = PaintingStyle.stroke

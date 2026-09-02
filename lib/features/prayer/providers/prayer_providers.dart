@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -14,7 +14,7 @@ final prayerTimesRepositoryProvider = Provider<PrayerTimesRepository>(
   (ref) => PrayerTimesRepository(),
 );
 
-/// Ticking clock — every minute, for nextPrayer countdown.
+/// Ticking clock - every minute, for nextPrayer countdown.
 /// Starts immediately with current time.
 final clockProvider = StreamProvider<DateTime>((ref) {
   // Emit now immediately, then every minute.
@@ -30,17 +30,17 @@ final clockProvider = StreamProvider<DateTime>((ref) {
   return controller.stream;
 });
 
-/// Current location — never throws, falls back to Mecca.
+/// Current location - never throws, falls back to Mecca.
 final currentLocationProvider = FutureProvider<AppLocation>((ref) async {
   final service = ref.watch(locationServiceProvider);
   return service.getCurrentLocation();
 });
 
-/// Today's prayer times — depends on location, offline via adhan.
+/// Today's prayer times - depends on location, offline via adhan.
 /// Invalidate at midnight to fetch new day (handled via clock watch).
 final prayerTimesProvider = FutureProvider<DeenPrayerTimes>((ref) async {
   final location = await ref.watch(currentLocationProvider.future);
-  // Watch clock to auto-refresh at midnight — rebuild when date changes.
+  // Watch clock to auto-refresh at midnight - rebuild when date changes.
   final clockAsync = ref.watch(clockProvider);
   final now = clockAsync.value ?? DateTime.now();
   final repo = ref.watch(prayerTimesRepositoryProvider);
@@ -67,7 +67,7 @@ final prayerTimesForDateProvider =
       );
     });
 
-/// Next prayer — depends on prayerTimes + clock, updates every minute.
+/// Next prayer - depends on prayerTimes + clock, updates every minute.
 final nextPrayerProvider = Provider<AsyncValue<NextPrayer>>((ref) {
   final timesAsync = ref.watch(prayerTimesProvider);
   // Also watch clock so this provider rebuilds every minute.

@@ -1,10 +1,10 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 import 'app_colors.dart';
 import 'app_spacing.dart';
 import 'app_typography.dart';
 
-/// Assembled ThemeData — light + dark, no generic Material defaults.
+/// Assembled ThemeData - light + dark, no generic Material defaults.
 ///
 /// Uses AppColors, AppTypography, AppSpacing exclusively.
 abstract final class AppTheme {

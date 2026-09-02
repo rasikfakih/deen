@@ -1,4 +1,4 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/database/deen_database.dart';
 import '../data/gamification_repository.dart';
@@ -18,7 +18,7 @@ final gamificationRepositoryProvider = Provider<GamificationRepository>((ref) {
   return GamificationRepository(db);
 });
 
-/// Stream of current streak row — UI can listen for changes.
+/// Stream of current streak row - UI can listen for changes.
 final streakStreamProvider = StreamProvider<Streak?>((ref) {
   final db = ref.watch(deenDatabaseProvider);
   // Watch single row id=1; if table empty, emit null then created.
@@ -27,7 +27,7 @@ final streakStreamProvider = StreamProvider<Streak?>((ref) {
   )..where((t) => t.id.equals(1))).watchSingleOrNull();
 });
 
-/// Stream of today's DailyReads — UI can listen for progress ring.
+/// Stream of today's DailyReads - UI can listen for progress ring.
 final todayProgressProvider = StreamProvider<DailyRead?>((ref) {
   final db = ref.watch(deenDatabaseProvider);
   final today = _formatDate(DateTime.now());

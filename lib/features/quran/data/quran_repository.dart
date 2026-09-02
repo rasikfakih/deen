@@ -1,8 +1,8 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 
 import 'package:flutter/services.dart';
 
-/// Immutable Ayah with both verified texts — loaded verbatim via
+/// Immutable Ayah with both verified texts - loaded verbatim via
 /// `rootBundle.loadString` (never generated/rewritten per DEEN 3).
 /// Surah = chapter, Ayah = verse. Holds Arabic Uthmani and English
 /// Sahih International translation.
@@ -36,7 +36,7 @@ class QuranRepository {
     if (_cache != null) return _cache!;
     final arStr = await rootBundle.loadString(_arPath);
     final enStr = await rootBundle.loadString(_enPath);
-    // Preserve verbatim text exactly — no trimming beyond JSON parsing.
+    // Preserve verbatim text exactly - no trimming beyond JSON parsing.
     final arJson = jsonDecode(arStr) as Map<String, dynamic>;
     final enJson = jsonDecode(enStr) as Map<String, dynamic>;
     final arList = arJson['quran'] as List<dynamic>;
@@ -50,7 +50,7 @@ class QuranRepository {
     for (var i = 0; i < arList.length; i++) {
       final ar = arList[i] as Map<String, dynamic>;
       final en = enList[i] as Map<String, dynamic>;
-      // Upstream is chapter/verse — map to surahId/ayahId per CTO.
+      // Upstream is chapter/verse - map to surahId/ayahId per CTO.
       result.add(
         QuranAyah(
           surahId: ar['chapter'] as int,

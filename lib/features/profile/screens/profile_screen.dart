@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
-/// Placeholder for future Profile via top bar — not in bottom nav.
+/// Placeholder for future Profile via top bar - not in bottom nav.
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 

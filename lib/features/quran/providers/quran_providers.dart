@@ -1,4 +1,4 @@
-import 'package:drift/drift.dart';
+﻿import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/database/deen_database.dart';
@@ -7,7 +7,7 @@ import '../../gamification/providers/gamification_providers.dart'
 import '../data/quran_repository.dart';
 
 // ---------------------------------------------------------------------------
-// Quran data — verbatim bundled JSON
+// Quran data - verbatim bundled JSON
 // ---------------------------------------------------------------------------
 
 final quranRepositoryProvider = Provider<QuranRepository>((ref) {
@@ -20,7 +20,7 @@ final quranDataProvider = FutureProvider<List<QuranAyah>>((ref) async {
 });
 
 // ---------------------------------------------------------------------------
-// Bookmarks — offline Drift
+// Bookmarks - offline Drift
 // ---------------------------------------------------------------------------
 
 final bookmarksProvider = StreamProvider<List<Bookmark>>((ref) {
@@ -35,7 +35,7 @@ final bookmarkedKeysProvider = Provider<Set<String>>((ref) {
   return {for (final b in list) '${b.surahId}:${b.ayahId}'};
 });
 
-// Toggle helper — exposed via provider for testability and UI.
+// Toggle helper - exposed via provider for testability and UI.
 final toggleBookmarkProvider =
     Provider<
       Future<void> Function({required int surahId, required int ayahId})
@@ -62,7 +62,7 @@ final toggleBookmarkProvider =
     });
 
 // ---------------------------------------------------------------------------
-// LastRead — single row id=1
+// LastRead - single row id=1
 // ---------------------------------------------------------------------------
 
 final lastReadProvider = StreamProvider<LastReadData?>((ref) {

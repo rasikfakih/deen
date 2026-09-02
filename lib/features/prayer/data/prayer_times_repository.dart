@@ -1,7 +1,7 @@
-import 'package:adhan/adhan.dart';
+﻿import 'package:adhan/adhan.dart';
 
 /// Simple Hijri date (tabular approximation, Umm al-Qura-like).
-/// True Hijri requires moon sighting — this is an algorithmic approximation
+/// True Hijri requires moon sighting - this is an algorithmic approximation
 /// for display purposes only. Uses a tabular conversion that is accurate
 /// within a day for most dates and matches known 2024-03-11 → 1445-09-01.
 class HijriDate {
@@ -12,7 +12,7 @@ class HijriDate {
   final int day;
 
   /// Approximate conversion from Gregorian to Hijri (tabular, Umm al-Qura-like).
-  /// True Hijri requires moon sighting — this is approximation for display.
+  /// True Hijri requires moon sighting - this is approximation for display.
   /// Uses simple offset (Gregorian year - 579) which yields 2024 → 1445
   /// matching known Ramadan 1445, with tabular month/day fallback.
   factory HijriDate.fromGregorian(DateTime gregorian) {

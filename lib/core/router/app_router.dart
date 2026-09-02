@@ -1,13 +1,14 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/home/screens/home_screen.dart';
+import '../../features/prayer/screens/prayer_times_screen.dart';
 import '../../features/qibla/screens/qibla_screen.dart';
 import '../../features/quran/screens/quran_reader_screen.dart';
 import '../../features/tasbih/screens/tasbih_screen.dart';
 import '../../shared/widgets/deen_bottom_nav.dart';
 
-/// Central router — ShellRoute with Material 3 NavigationBar.
+/// Central router - ShellRoute with Material 3 NavigationBar.
 ///
 /// Bottom navigation: Home, Quran, Qibla, Tasbih (per DEEN Section 9).
 /// Profile/Settings via top bar (future). Uses go_router 14+ / 18.
@@ -40,6 +41,11 @@ final GoRouter appRouter = GoRouter(
           builder: (context, state) => const TasbihScreen(),
         ),
       ],
+    ),
+    GoRoute(
+      path: '/prayer-times',
+      name: 'prayerTimes',
+      builder: (context, state) => const PrayerTimesScreen(),
     ),
     // Redirect root to home.
     GoRoute(path: '/', redirect: (context, state) => '/home'),

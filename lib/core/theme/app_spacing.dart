@@ -1,6 +1,6 @@
-/// Strict 4/8pt spacing and radii scale per DEEN Section 8.
+﻿/// Strict 4/8pt spacing and radii scale per DEEN Section 8.
 ///
-/// Use only these constants — no magic numbers in widgets. If a value is
+/// Use only these constants - no magic numbers in widgets. If a value is
 /// missing, add it here with review.
 abstract final class AppSpacing {
   // Spacing.
