@@ -1,4 +1,4 @@
-package com.freebuff.deen
+package com.rasikfakih.deen
 
 import io.flutter.embedding.android.FlutterActivity
 

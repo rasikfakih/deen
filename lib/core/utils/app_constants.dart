@@ -4,5 +4,5 @@
 
 abstract final class AppConstants {
   static const String appName = 'Deen';
-  static const String packageName = 'com.freebuff.deen';
+  static const String packageName = 'com.rasikfakih.deen';
 }

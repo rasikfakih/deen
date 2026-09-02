@@ -1,5 +1,7 @@
 # Deen
 
+Created by Rasik Fakih - free, open-source Muslim habit app.
+
 **The habit science of Quranly plus a complete Muslim toolkit -- free forever, offline-first, global.**
 
 Deen is an open-source Flutter app for Android and iOS that helps Muslims build consistent daily habits: reading Quran, praying on time, remembering Allah through tasbih and duas, and staying connected with family through private encouragement circles.
@@ -77,7 +79,7 @@ Quran text and translations provided by quran.com and tanzil.net. Mushaf images 
 
 ## Contributing
 
-See `CONTRIBUTING.md`. All AI-generated code requires human review. Run `dart format`, `flutter analyze`, `flutter test`, and `dart run scripts/verify_quran_integrity.dart` before pushing.
+See `CONTRIBUTING.md`. All code requires human review. Run `dart format`, `flutter analyze`, `flutter test`, and `dart run scripts/verify_quran_integrity.dart` before pushing.
 
 ## Privacy
 
