@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/home/screens/home_screen.dart';
 import '../../features/qibla/screens/qibla_screen.dart';
-import '../../features/quran/screens/quran_screen.dart';
+import '../../features/quran/screens/quran_reader_screen.dart';
 import '../../features/tasbih/screens/tasbih_screen.dart';
 import '../../shared/widgets/deen_bottom_nav.dart';
 
@@ -27,7 +27,7 @@ final GoRouter appRouter = GoRouter(
         GoRoute(
           path: '/quran',
           name: 'quran',
-          builder: (context, state) => const QuranScreen(),
+          builder: (context, state) => const QuranReaderScreen(),
         ),
         GoRoute(
           path: '/qibla',
