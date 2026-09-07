@@ -31,6 +31,21 @@ abstract final class AppGradients {
     end: Alignment.bottomRight,
   );
 
+  // Design v3 hero flows (DEEN 8.2). Same 135deg convention as goldFlow.
+  static const emeraldFlow = LinearGradient(
+    colors: [Color(0xFF0E9F6E), Color(0xFF0C1512)],
+    begin: Alignment(-0.9, -0.9),
+    end: Alignment(0.9, 0.9),
+    transform: GradientRotation(135 * math.pi / 180),
+  );
+
+  static const nightFlow = LinearGradient(
+    colors: [Color(0xFF2A2520), Color(0xFF0C1512)],
+    begin: Alignment(-0.9, -0.9),
+    end: Alignment(0.9, 0.9),
+    transform: GradientRotation(135 * math.pi / 180),
+  );
+
   // Specular top highlight for lensing (white 0.45 -> transparent)
   static LinearGradient get specularHighlight => LinearGradient(
     colors: [Colors.white.withValues(alpha: 0.42), Colors.transparent],

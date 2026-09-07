@@ -88,6 +88,58 @@ final weeklyLeaderboardProvider =
       }
     });
 
+/// My circles for the Home card (CTO-approved, graceful guest/offline).
+/// Returns [{id, name}] for circles the current user joined.
+/// Empty when signed out, unconfigured, offline, or member of none.
+final myCirclesProvider = FutureProvider<List<Map<String, dynamic>>>((
+  ref,
+) async {
+  final service = ref.watch(supabaseServiceProvider);
+  final c = service.client;
+  if (c == null) return const [];
+  final userId = c.auth.currentUser?.id;
+  if (userId == null) return const [];
+  try {
+    final rows = await c
+        .from('circle_members')
+        .select('circle_id, joined_at, circles(id, name)')
+        .eq('user_id', userId)
+        .order('joined_at', ascending: false);
+    final result = <Map<String, dynamic>>[];
+    for (final r in rows as List) {
+      final circle = r['circles'];
+      if (circle is Map) {
+        result.add({
+          'id': circle['id'],
+          'name': circle['name'] ?? 'Family circle',
+        });
+      }
+    }
+    return result;
+  } catch (_) {
+    return const [];
+  }
+});
+
+/// Member count for one circle. Zero on any failure (offline/guest).
+final circleMemberCountProvider = FutureProvider.family<int, String>((
+  ref,
+  circleId,
+) async {
+  final service = ref.watch(supabaseServiceProvider);
+  final c = service.client;
+  if (c == null) return 0;
+  try {
+    final rows = await c
+        .from('circle_members')
+        .select('user_id')
+        .eq('circle_id', circleId);
+    return (rows as List).length;
+  } catch (_) {
+    return 0;
+  }
+});
+
 /// Returns human readable "Last updated X ago" for cached leaderboard.
 final lastLeaderboardUpdatedProvider = FutureProvider.family<String?, String>((
   ref,

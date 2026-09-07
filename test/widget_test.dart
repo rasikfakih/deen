@@ -21,9 +21,26 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 200));
 
-    // Home is initial location - premium dashboard (CustomScrollView).
+    // Home is initial location - v3 canvas dashboard (CustomScrollView).
     expect(find.byType(CustomScrollView), findsOneWidget);
     expect(find.byType(DeenGlassNavBar), findsOneWidget);
+
+    // Design v3 Home modules render on canvas (above the fold).
+    expect(find.byKey(const ValueKey('goal-hero')), findsOneWidget);
+    expect(find.byKey(const ValueKey('surah-chips')), findsOneWidget);
+    expect(find.byKey(const ValueKey('ayah-of-day')), findsOneWidget);
+
+    // Below-fold modules: drag to build them (SliverList builds lazily).
+    // No pumpAndSettle: the week pill pulse repeats forever by design.
+    for (var i = 0; i < 4; i++) {
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, -500));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+    }
+    expect(find.byKey(const ValueKey('challenge-card')), findsOneWidget);
+    expect(find.byKey(const ValueKey('stats-row')), findsOneWidget);
+    expect(find.byKey(const ValueKey('family-card')), findsOneWidget);
+    expect(find.byKey(const ValueKey('prayer-strip')), findsOneWidget);
 
     // Navigate to Quran reader (text mode).
     await tester.tap(find.text('Quran'));

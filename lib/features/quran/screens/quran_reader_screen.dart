@@ -77,6 +77,9 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> {
   Future<void> _updateLastRead(QuranAyah ayah) async {
     final updater = ref.read(updateLastReadProvider);
     await updater(surahId: ayah.surahId, ayahId: ayah.ayahId);
+    // Track recent surahs for Home quick chips (IDs only, R1.5 adds names).
+    final pushRecent = ref.read(pushRecentSurahProvider);
+    await pushRecent(ayah.surahId);
   }
 
   @override
