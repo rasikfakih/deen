@@ -51,6 +51,10 @@
 	<true/>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Deen uses your location on-device to calculate accurate prayer times and Qibla direction. Your location never leaves your phone unless you enable sync.</string>
+	<key>NSMotionUsageDescription</key>
+	<string>Deen uses motion sensors for the Qibla compass so it can point you toward Mecca.</string>
 	<key>UIMainStoryboardFile</key>
 	<string>Main</string>
 	<key>UISupportedInterfaceOrientations</key>

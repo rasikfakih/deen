@@ -16,9 +16,10 @@ Every dataset below is downloaded **once at build time** via `dart run scripts/f
 
 ### 2. English Translation -- Sahih International
 
-- **Source URL (primary CDN):** `https://cdn.jsdelivr.net/gh/fawazahmed0/quran-api@1/editions/eng-sahihinternational.json`
-- **Source URL (fallback):** `https://raw.githubusercontent.com/fawazahmed0/quran-api/1/editions/eng-sahihinternational.json` and `https://quranenc.com/en/browse/english_saheeh`
+- **Source URL (primary CDN):** `https://cdn.jsdelivr.net/gh/fawazahmed0/quran-api@1/editions/eng-ummmuhammad.json`
+- **Source URL (fallback):** `https://raw.githubusercontent.com/fawazahmed0/quran-api/1/editions/eng-ummmuhammad.json` and `https://quranenc.com/en/browse/english_saheeh`
 - **Upstream origin:** [quranenc.com](https://quranenc.com) (QuranEnc), Sahih International
+- **Note:** In `fawazahmed0/quran-api` this edition is named `eng-ummmuhammad` (authored by Umm Muhammad, the Sahih International translator). It is the same Sahih International text referenced as `eng-sahihinternational` in older docs.
 - **License:** CC BY-NC-ND
 - **Attribution text:** "English Sahih International translation via quranenc.com (QuranEnc) mirrored by fawazahmed0/quran-api."
 - **Hosting:** **Bundled** as `assets/data/raw/quran_en.json` (verbatim upstream).

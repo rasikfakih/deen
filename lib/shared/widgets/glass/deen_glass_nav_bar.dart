@@ -7,7 +7,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_gradients.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/utils/deen_icons.dart';
-import '../../../features/settings/providers/settings_providers.dart';
+import '../../providers/display_providers.dart';
 import 'deen_glass.dart';
 import 'deen_gradient_icon.dart';
 import 'glass_metrics.dart';

@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/utils/app_constants.dart';
 import '../../../shared/widgets/glass/deen_glass_app_bar.dart';
 
 class SupportScreen extends StatelessWidget {
@@ -64,8 +65,7 @@ class SupportScreen extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              onPressed: () =>
-                  _openUrl('https://github.com/sponsors/rasikfakih'),
+              onPressed: () => _openUrl(AppConstants.githubSponsorsUrl),
               icon: const Icon(Icons.favorite_border),
               label: const Text('Support on GitHub Sponsors'),
               style: ElevatedButton.styleFrom(
@@ -76,20 +76,30 @@ class SupportScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.spaceSM),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: () =>
-                  _openUrl('https://buy.stripe.com/test_placeholder'),
-              icon: const Icon(Icons.payment_outlined),
-              label: const Text('Donate via Stripe'),
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  vertical: AppSpacing.spaceMD,
+          // Stripe is shown only when STRIPE_DONATE_URL is configured at
+          // release time. No test/placeholder URL ships to production.
+          if (AppConstants.stripeDonateUrl.isNotEmpty)
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () => _openUrl(AppConstants.stripeDonateUrl),
+                icon: const Icon(Icons.payment_outlined),
+                label: const Text('Donate via Stripe'),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: AppSpacing.spaceMD,
+                  ),
                 ),
               ),
+            )
+          else
+            Text(
+              'Card donations via Stripe are coming soon — GitHub Sponsors works today.',
+              style: AppTypography.bodySmall.copyWith(
+                color: AppColors.textMuted,
+              ),
+              textAlign: TextAlign.center,
             ),
-          ),
           const SizedBox(height: AppSpacing.spaceXL),
           Text(
             'Thank you for helping keep Deen free for every person on earth.',

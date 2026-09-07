@@ -9,7 +9,7 @@
 
 ## Reporting a Vulnerability
 
-- Email: security@rasikfakih.com (placeholder -- update before public launch)
+- Email: security@rasikfakih.com
 - Or open a **private** GitHub Security Advisory on this repository.
 
 Please include:

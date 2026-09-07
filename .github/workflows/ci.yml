@@ -3,18 +3,36 @@ name: CI
 on:
   pull_request:
     branches: [develop, main]
+  push:
+    branches: [develop, main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
         with:
+          flutter-version: 3.47.2
           channel: stable
           cache: true
       - run: flutter pub get
       - run: dart format --set-exit-if-changed .
       - run: flutter analyze --no-pub
-      - run: flutter test
+      - run: flutter test --coverage
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-lcov
+          path: coverage/lcov.info
+          if-no-files-found: warn
       - run: dart run scripts/verify_quran_integrity.dart

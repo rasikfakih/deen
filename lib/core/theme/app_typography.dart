@@ -6,9 +6,9 @@ import 'package:flutter/material.dart';
 /// Arabic UI - Tajawal bundled via assets/fonts.
 /// Mushaf text - Amiri Quran / KFGQPC Uthman Taha (handled separately).
 ///
-/// Fonts are declared in pubspec.yaml and bundled as assets. If the
-/// placeholder TTF files have not yet been replaced with real OFL files,
-/// Flutter will safely fallback to system fonts without crashing.
+/// Fonts are declared in pubspec.yaml and bundled as assets (offline-first,
+/// GoogleFonts runtime fetching is disabled in main.dart). If a TTF is missing,
+/// Flutter safely falls back to system fonts without crashing.
 abstract final class AppTypography {
   // Base text style helpers - Poppins is the single source of truth for Latin.
   static TextStyle _poppins({

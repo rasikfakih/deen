@@ -1,17 +1,13 @@
 ﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../shared/database/database_providers.dart';
 import '../../../shared/database/deen_database.dart';
 import '../data/gamification_repository.dart';
 
-/// Single database instance for the app (offline-first).
-/// Heavy DB work off main isolate is handled inside NativeDatabase.createInBackground.
-final deenDatabaseProvider = Provider<DeenDatabase>((ref) {
-  final db = DeenDatabase();
-  ref.onDispose(() async {
-    await db.close();
-  });
-  return db;
-});
+/// Canonical owner is shared/database/database_providers.dart.
+/// Re-exported here so existing feature/test imports keep working.
+export '../../../shared/database/database_providers.dart'
+    show deenDatabaseProvider;
 
 final gamificationRepositoryProvider = Provider<GamificationRepository>((ref) {
   final db = ref.watch(deenDatabaseProvider);

@@ -1,6 +1,7 @@
--- Deen Supabase Schema - Family Circles & Profiles
--- Readable snapshot. Source of truth: supabase/migrations/* (`supabase db push`).
--- Run in Supabase SQL Editor. Requires pgcrypto for gen_random_uuid.
+-- Migration: family circles, profiles, weekly stats (versioned).
+-- Source of truth going forward: run `supabase db push` (or apply this file
+-- in the SQL Editor). supabase/schema.sql is kept as a readable snapshot.
+-- Requires pgcrypto for gen_random_uuid.
 
 create extension if not exists "pgcrypto";
 
@@ -24,6 +25,10 @@ create policy "Users can upsert own profile" on profiles
 drop policy if exists "Users can update own profile" on profiles;
 create policy "Users can update own profile" on profiles
   for update using (auth.uid() = id);
+
+drop policy if exists "Users can delete own profile" on profiles;
+create policy "Users can delete own profile" on profiles
+  for delete using (auth.uid() = id);
 
 -- Circles: private family circles with 6-char invite code
 create table if not exists circles (
@@ -50,6 +55,14 @@ drop policy if exists "Authenticated can create circles" on circles;
 create policy "Authenticated can create circles" on circles
   for insert with check (auth.uid() = created_by);
 
+drop policy if exists "Creators can update own circles" on circles;
+create policy "Creators can update own circles" on circles
+  for update using (auth.uid() = created_by);
+
+drop policy if exists "Creators can delete own circles" on circles;
+create policy "Creators can delete own circles" on circles
+  for delete using (auth.uid() = created_by);
+
 -- Circle members: many-to-many
 create table if not exists circle_members (
   circle_id uuid references circles(id) on delete cascade,
@@ -74,6 +87,10 @@ drop policy if exists "Users can join via invite code" on circle_members;
 create policy "Users can join via invite code" on circle_members
   for insert with check (auth.uid() = user_id);
 
+drop policy if exists "Users can leave circles" on circle_members;
+create policy "Users can leave circles" on circle_members
+  for delete using (auth.uid() = user_id);
+
 -- Weekly stats: per user per week (Monday start)
 create table if not exists weekly_stats (
   user_id uuid references auth.users(id) on delete cascade,
@@ -97,6 +114,10 @@ drop policy if exists "Users can update own weekly stats" on weekly_stats;
 create policy "Users can update own weekly stats" on weekly_stats
   for update using (auth.uid() = user_id);
 
+drop policy if exists "Users can delete own weekly stats" on weekly_stats;
+create policy "Users can delete own weekly stats" on weekly_stats
+  for delete using (auth.uid() = user_id);
+
 drop policy if exists "Circle members can read leaderboard" on weekly_stats;
 create policy "Circle members can read leaderboard" on weekly_stats
   for select using (
@@ -110,3 +131,33 @@ create policy "Circle members can read leaderboard" on weekly_stats
       )
     )
   );
+
+-- Indexes for invite lookup + leaderboard reads
+create index if not exists circles_invite_code_idx on circles (invite_code);
+create index if not exists circle_members_user_id_idx on circle_members (user_id);
+create index if not exists circle_members_circle_id_idx on circle_members (circle_id);
+create index if not exists weekly_stats_week_idx on weekly_stats (week_start_date);
+
+-- Server-side invite code generation (avoids client SecureRandom collisions).
+-- Usage: insert into circles (name, invite_code, created_by)
+--        values ('Family', generate_invite_code(), auth.uid());
+create or replace function generate_invite_code()
+returns varchar(6)
+language plpgsql
+as $$
+declare
+  chars text := 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  result varchar(6) := '';
+  i int;
+begin
+  -- Crockford-lite alphabet: no I/O/0/1 to avoid confusion when read aloud.
+  for i in 1..6 loop
+    result := result || substr(chars, (random() * 31)::int + 1, 1);
+  end loop;
+  -- Retry on collision (unique constraint backs this up).
+  if exists (select 1 from circles where invite_code = result) then
+    return generate_invite_code();
+  end if;
+  return result;
+end;
+$$;

@@ -1,9 +1,12 @@
-﻿import 'package:adhan/adhan.dart';
+import 'package:adhan/adhan.dart';
 
-/// Simple Hijri date (tabular approximation, Umm al-Qura-like).
-/// True Hijri requires moon sighting - this is an algorithmic approximation
-/// for display purposes only. Uses a tabular conversion that is accurate
-/// within a day for most dates and matches known 2024-03-11 → 1445-09-01.
+/// Simple Hijri date (arithmetical / tabular calendar).
+/// True Hijri months begin with the sighted crescent (Umm al-Qura calendar),
+/// so this can differ by ±1-2 days from observed dates. It is a display
+/// approximation only — never used for religious rulings.
+/// Uses the standard Gregorian→JDN→Islamic tabular conversion
+/// (30-year leap cycle: years 2,5,7,10,13,16,18,21,24,26,29), which stays
+/// offline with zero dependencies.
 class HijriDate {
   const HijriDate({required this.year, required this.month, required this.day});
 
@@ -11,32 +14,45 @@ class HijriDate {
   final int month;
   final int day;
 
-  /// Approximate conversion from Gregorian to Hijri (tabular, Umm al-Qura-like).
-  /// True Hijri requires moon sighting - this is approximation for display.
-  /// Uses simple offset (Gregorian year - 579) which yields 2024 → 1445
-  /// matching known Ramadan 1445, with tabular month/day fallback.
+  /// Arithmetical conversion from Gregorian to Hijri (tabular calendar).
+  /// Accurate to ±1-2 days vs observed (moon-sighting) dates.
+  /// Known anchors: 2024-03-11 → 1445-09-01, 2025-03-01 → 1446-09-01.
   factory HijriDate.fromGregorian(DateTime gregorian) {
-    // Tabular approximation: year offset aligns with known 2024-03-11 → 1445-09-01
-    // For precise Umm al-Qura, a full astronomical table would be needed.
-    // We use a lightweight approximation that passes sanity checks and
-    // avoids a heavy hijri dependency while staying offline.
-    final approxYear = gregorian.year - 579;
-    // Use a deterministic month/day mapping that stays within 1-12 / 1-30.
-    // For March→Ramadan mapping we adjust: if March, map to 9.
-    int approxMonth = gregorian.month;
-    int approxDay = gregorian.day;
-    // Heuristic: shift Gregorian month 3 (Mar) to Hijri 9 (Ramadan) for 2024 sanity
-    // and generally map months via tabular drift. This keeps year correct and
-    // month/day plausible for tests without requiring full astronomical table.
-    if (gregorian.year == 2024 && gregorian.month == 3 && gregorian.day == 11) {
-      return const HijriDate(year: 1445, month: 9, day: 1);
-    }
-    // General fallback: tabular year offset, month/day normalized.
-    if (approxMonth < 1) approxMonth = 1;
-    if (approxMonth > 12) approxMonth = 12;
-    if (approxDay < 1) approxDay = 1;
-    if (approxDay > 30) approxDay = 30;
-    return HijriDate(year: approxYear, month: approxMonth, day: approxDay);
+    final jd = _gregorianToJdn(gregorian.year, gregorian.month, gregorian.day);
+    return _jdnToHijri(jd);
+  }
+
+  /// Julian Day Number for a Gregorian date (integer, noon-based).
+  static int _gregorianToJdn(int y, int m, int d) {
+    final a = (14 - m) ~/ 12;
+    final yy = y + 4800 - a;
+    final mm = m + 12 * a - 3;
+    return d +
+        ((153 * mm + 2) ~/ 5) +
+        365 * yy +
+        (yy ~/ 4) -
+        (yy ~/ 100) +
+        (yy ~/ 400) -
+        32045;
+  }
+
+  /// Tabular Islamic date from Julian Day Number.
+  static HijriDate _jdnToHijri(int jd) {
+    var l = jd - 1948440 + 10632;
+    final n = (l - 1) ~/ 10631;
+    l = l - 10631 * n + 354;
+    final j =
+        ((10985 - l) ~/ 5316) * ((50 * l) ~/ 17719) +
+        (l ~/ 5670) * ((43 * l) ~/ 15238);
+    l =
+        l -
+        ((30 - j) ~/ 15) * ((17719 * j) ~/ 50) -
+        (j ~/ 16) * ((15238 * j) ~/ 43) +
+        29;
+    final month = (24 * l) ~/ 709;
+    final day = l - ((709 * month) ~/ 24);
+    final year = 30 * n + j - 30;
+    return HijriDate(year: year, month: month, day: day);
   }
 
   @override

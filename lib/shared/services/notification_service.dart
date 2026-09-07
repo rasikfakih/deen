@@ -1,10 +1,6 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
-
-import '../../features/prayer/data/prayer_times_repository.dart';
 
 class NotificationService {
   NotificationService._();
@@ -23,21 +19,23 @@ class NotificationService {
     _initialized = true;
   }
 
-  Future<void> schedulePrayerNotifications(DeenPrayerTimes times) async {
+  /// Schedules reminders 15 min before each prayer.
+  /// Takes primitives (not DeenPrayerTimes) so shared never imports a feature.
+  Future<void> schedulePrayerNotifications(
+    List<({String name, DateTime time})> prayers,
+  ) async {
     await init();
     // Cancel previous prayer notifications (ids 1-5)
     for (var i = 1; i <= 5; i++) {
       await _plugin.cancel(id: i);
     }
-    final prayers = [
-      (name: 'Fajr', time: times.fajr),
-      (name: 'Dhuhr', time: times.dhuhr),
-      (name: 'Asr', time: times.asr),
-      (name: 'Maghrib', time: times.maghrib),
-      (name: 'Isha', time: times.isha),
-    ];
+    final wanted = {'Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'};
+    final filtered = prayers
+        .where((p) => wanted.contains(p.name))
+        .take(5)
+        .toList();
     var id = 1;
-    for (final p in prayers) {
+    for (final p in filtered) {
       final scheduleTime = p.time.subtract(const Duration(minutes: 15));
       if (scheduleTime.isBefore(DateTime.now())) continue;
       final tzTime = tz.TZDateTime.from(scheduleTime, tz.local);

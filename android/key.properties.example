@@ -1,0 +1,7 @@
+# Release signing keystore — NEVER commit the real file.
+# Copy to android/key.properties (gitignored) and fill in before store releases.
+# Generate once: keytool -genkey -v -keystore deen-release.jks -keyalg RSA -keysize 2048 -validity 10000 -alias deen
+storeFile=../deen-release.jks
+storePassword=CHANGE_ME
+keyAlias=deen
+keyPassword=CHANGE_ME

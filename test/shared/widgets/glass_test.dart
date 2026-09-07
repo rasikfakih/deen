@@ -5,7 +5,6 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:deen/features/settings/providers/settings_providers.dart';
 import 'package:deen/shared/database/deen_database.dart';
-import 'package:deen/features/gamification/providers/gamification_providers.dart';
 import 'package:deen/shared/widgets/glass/deen_glass.dart';
 import 'package:deen/shared/widgets/glass/deen_glass_nav_bar.dart';
 

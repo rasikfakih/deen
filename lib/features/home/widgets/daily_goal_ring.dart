@@ -7,7 +7,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_gradients.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
-import '../../settings/providers/settings_providers.dart';
+import '../../../shared/providers/display_providers.dart';
 
 /// Playful progress ring - CustomPainter, Gold flow gradient, glowing shadow.
 /// Flexible for minutes or ayahs via [unit] (e.g., "min", "ayahs").
@@ -31,87 +31,93 @@ class DailyGoalRing extends ConsumerWidget {
     final percent = (progress * 100).round();
     final elderly = ref.watch(elderlyModeProvider).valueOrNull ?? false;
 
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.spaceMD),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : Colors.white,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLG),
-        border: Border.all(
-          color: isDark
-              ? AppColors.darkOutlineVariant
-              : AppColors.lightOutlineVariant,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: isDark ? AppColors.shadowDark : AppColors.shadowLight,
-            blurRadius: AppSpacing.elevationSM,
-            offset: const Offset(0, 2),
+    return Semantics(
+      label: 'Daily goal progress',
+      value: '$current of $target $unit, $percent percent',
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.spaceMD),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.darkSurface : Colors.white,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusLG),
+          border: Border.all(
+            color: isDark
+                ? AppColors.darkOutlineVariant
+                : AppColors.lightOutlineVariant,
           ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            'Daily Goal',
-            style: AppTypography.labelMedium.copyWith(
-              color: AppColors.textMuted,
-              letterSpacing: 0.6,
+          boxShadow: [
+            BoxShadow(
+              color: isDark ? AppColors.shadowDark : AppColors.shadowLight,
+              blurRadius: AppSpacing.elevationSM,
+              offset: const Offset(0, 2),
             ),
-          ),
-          const SizedBox(height: AppSpacing.spaceMD),
-          SizedBox(
-            width: 140,
-            height: 140,
-            child: CustomPaint(
-              painter: _RingPainter(
-                progress: progress,
-                isDark: isDark,
-                isElderly: elderly,
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Daily Goal',
+              style: AppTypography.labelMedium.copyWith(
+                color: AppColors.textMuted,
+                letterSpacing: 0.6,
               ),
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      '$current / $target',
-                      style: AppTypography.titleLarge.copyWith(
-                        color: isDark
-                            ? AppColors.darkOnSurface
-                            : AppColors.textDark,
-                        fontWeight: FontWeight.w700,
+            ),
+            const SizedBox(height: AppSpacing.spaceMD),
+            SizedBox(
+              width: 140,
+              height: 140,
+              child: CustomPaint(
+                painter: _RingPainter(
+                  progress: progress,
+                  isDark: isDark,
+                  isElderly: elderly,
+                ),
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '$current / $target',
+                        style: AppTypography.titleLarge.copyWith(
+                          color: isDark
+                              ? AppColors.darkOnSurface
+                              : AppColors.textDark,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
-                    ),
-                    Text(
-                      unit,
-                      style: AppTypography.labelSmall.copyWith(
-                        color: AppColors.textMuted,
+                      Text(
+                        unit,
+                        style: AppTypography.labelSmall.copyWith(
+                          color: AppColors.textMuted,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '$percent%',
-                      style: AppTypography.labelSmall.copyWith(
-                        color: progress >= 1.0
-                            ? AppColors.goldDark
-                            : AppColors.textMuted,
-                        fontWeight: FontWeight.w600,
+                      const SizedBox(height: 2),
+                      Text(
+                        '$percent%',
+                        style: AppTypography.labelSmall.copyWith(
+                          color: progress >= 1.0
+                              ? AppColors.goldDark
+                              : AppColors.textMuted,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-          const SizedBox(height: AppSpacing.spaceSM),
-          Text(
-            progress >= 1.0
-                ? 'Goal completed - mashaAllah!'
-                : 'Keep going, you’ve got this',
-            style: AppTypography.bodySmall.copyWith(color: AppColors.textMuted),
-            textAlign: TextAlign.center,
-          ),
-        ],
+            const SizedBox(height: AppSpacing.spaceSM),
+            Text(
+              progress >= 1.0
+                  ? 'Goal completed - mashaAllah!'
+                  : 'Keep going, you’ve got this',
+              style: AppTypography.bodySmall.copyWith(
+                color: AppColors.textMuted,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       ),
     );
   }
