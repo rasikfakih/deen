@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 /// Design tokens - palette per DEEN_AI_CONTEXT.md Section 8.
 ///
@@ -16,6 +16,17 @@ abstract final class AppColors {
   static const Color earthBrown = Color(0xFF874D14);
   static const Color earthBrownDark = Color(0xFF6B3C10);
   static const Color earthBrownLight = Color(0xFF9E5A1A);
+
+  // Design v3 accents (CTO-approved, DEEN 8.2).
+  static const Color emerald = Color(0xFF0E9F6E);
+  static const Color emeraldDark = Color(0xFF0B6B4C);
+  static const Color hasanatSpark = Color(0xFFFFC25C);
+
+  // Design v3 canvas surfaces.
+  static const Color nightCanvasTop = Color(0xFF10201A);
+  static const Color nightCanvasBottom = Color(0xFF0C1512);
+  static const Color parchment = Color(0xFFF4EEE1);
+  static const Color mushafNight = Color(0xFF16130F);
 
   static const Color cream = Color(0xFFF9F6F0);
   static const Color creamDark = Color(0xFFECE6D9);
@@ -64,7 +75,9 @@ abstract final class AppColors {
 
   // Glass tokens - translucency only for navigation layer per DEEN Section 8.1.
   // Content cards stay opaque (white / darkSurface). Glass is nav bars only.
-  static Color get glassLight => Colors.white.withValues(alpha: 0.62);
+  // Light tint is warm #FFF8EE (CTO device-QA ruling, DEEN 8.2).
+  static Color get glassLight =>
+      const Color(0xFFFFF8EE).withValues(alpha: 0.62);
   static Color get glassDark => const Color(0xFF1E1B16).withValues(alpha: 0.55);
   static Color get glassBorderLight => Colors.white.withValues(alpha: 0.18);
   static Color get glassBorderDark => Colors.white.withValues(alpha: 0.12);

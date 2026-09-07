@@ -1,18 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:go_router/go_router.dart';
-
+import '../../../core/theme/app_canvas.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../shared/widgets/glass/deen_glass_app_bar.dart';
 import '../../../shared/widgets/glass/deen_scroll_edge_fade.dart';
+import '../../../shared/widgets/pattern_overlay.dart';
 import '../../gamification/providers/gamification_providers.dart';
 import '../../prayer/providers/prayer_providers.dart';
-import '../widgets/daily_goal_ring.dart';
-import '../widgets/hasanat_ticker.dart';
-import '../widgets/next_prayer_card.dart';
+import '../../quran/providers/quran_providers.dart';
+import '../providers/home_stats_providers.dart';
+import '../widgets/ayah_of_day_card.dart';
+import '../widgets/daily_challenge_card.dart';
+import '../widgets/family_card.dart';
+import '../widgets/goal_hero_card.dart';
+import '../widgets/home_header.dart';
+import '../widgets/prayer_strip.dart';
+import '../widgets/stats_row.dart';
+import '../widgets/surah_chips.dart';
 import '../widgets/weekly_streak_tracker.dart';
 
 // Top-level providers for Home dashboard - keeps build pure.
@@ -45,11 +52,12 @@ final homeDashboardProvider = FutureProvider<HomeDashboardData>((ref) async {
     useMinutes = true;
   }
 
-  final monday = _mondayOfWeek(now);
+  final monday = mondayOfWeek(now);
   final completed = <bool>[];
   for (var i = 0; i < 7; i++) {
     final date = monday.add(Duration(days: i));
-    final dateStr = _fmtDate(date);
+    final dateStr =
+        '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
     final read = await db.getDailyReadByDate(dateStr);
     bool met = false;
     if (read != null) {
@@ -71,23 +79,8 @@ final homeDashboardProvider = FutureProvider<HomeDashboardData>((ref) async {
   );
 });
 
-String _fmtDate(DateTime d) {
-  final y = d.year.toString().padLeft(4, '0');
-  final m = d.month.toString().padLeft(2, '0');
-  final day = d.day.toString().padLeft(2, '0');
-  return '$y-$m-$day';
-}
-
-DateTime _mondayOfWeek(DateTime now) {
-  final weekday = now.weekday; // 1 Mon .. 7 Sun
-  return DateTime(
-    now.year,
-    now.month,
-    now.day,
-  ).subtract(Duration(days: weekday - 1));
-}
-
-/// Premium Home Dashboard - playful layer, spacious, motivating.
+/// Design v3 Home - playful canvas layer, modules in spec order.
+/// Canvas + pattern behind; glass only on app bar + nav bar.
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
@@ -98,15 +91,6 @@ class HomeScreen extends ConsumerWidget {
     return 'Good evening';
   }
 
-  String _formatCountdown(DateTime next, DateTime now) {
-    final diff = next.difference(now);
-    if (diff.isNegative) return 'now';
-    final hours = diff.inHours;
-    final minutes = diff.inMinutes % 60;
-    if (hours > 0) return 'in ${hours}h ${minutes}m';
-    return 'in ${minutes}m';
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -114,185 +98,134 @@ class HomeScreen extends ConsumerWidget {
 
     final streakAsync = ref.watch(streakStreamProvider);
     final todayAsync = ref.watch(todayProgressProvider);
-    final nextPrayerAsync = ref.watch(nextPrayerProvider);
-    final clockAsync = ref.watch(clockProvider);
     final greetingAsync = ref.watch(greetingNameProvider);
     final homeDataAsync = ref.watch(homeDashboardProvider);
+    final lastReadAsync = ref.watch(lastReadProvider);
+
+    final streak = streakAsync.valueOrNull?.currentStreak ?? 0;
+    final today = todayAsync.valueOrNull;
+    final homeData = homeDataAsync.valueOrNull;
+    final targetAyahs = homeData?.targetAyahs ?? 5;
+    final todayAyahs = today?.ayahsRead ?? 0;
+    final last = lastReadAsync.valueOrNull;
 
     return Scaffold(
       extendBody: true,
       extendBodyBehindAppBar: true,
-      backgroundColor: isDark
-          ? AppColors.darkBackgroundSemantic
-          : AppColors.lightBackground,
-      appBar: DeenGlassAppBar(
-        title: 'Home',
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings_outlined),
-            onPressed: () => context.push('/settings'),
-            tooltip: 'Settings',
+      backgroundColor: Colors.transparent,
+      appBar: const DeenGlassAppBar(title: 'Home'),
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: Container(
+              decoration: CanvasGradient.forBrightness(
+                isDark ? Brightness.dark : Brightness.light,
+              ),
+            ),
           ),
-        ],
-      ),
-      body: CustomScrollView(
-        slivers: [
-          const SliverToBoxAdapter(child: SizedBox(height: kToolbarHeight)),
-          const SliverToBoxAdapter(child: DeenScrollEdgeFade(isTop: true)),
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.spaceMD,
-              AppSpacing.spaceSM,
-              AppSpacing.spaceMD,
-              100,
-            ),
-            sliver: SliverList.list(
-              children: [
-                // Greeting - SettingsCache user_name per CTO 1
-                greetingAsync.when(
-                  data: (name) {
-                    final displayName = (name != null && name.trim().isNotEmpty)
-                        ? ', $name'
-                        : '';
-                    final greet = _greeting(now);
-                    // CTO: if exists use "Peace be upon you, [Name]" else generic
-                    final line2 = displayName.isEmpty
-                        ? 'Peace be upon you'
-                        : 'Peace be upon you$displayName';
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '$greet$displayName',
-                          style: AppTypography.headlineSmall.copyWith(
-                            color: isDark
-                                ? AppColors.darkOnSurface
-                                : AppColors.textDark,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          line2,
-                          style: AppTypography.bodyMedium.copyWith(
-                            color: AppColors.textMuted,
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                  loading: () => Text(
-                    '${_greeting(now)}, there',
-                    style: AppTypography.headlineSmall.copyWith(
-                      color: isDark
-                          ? AppColors.darkOnSurface
-                          : AppColors.textDark,
+          const Positioned.fill(child: DeenPatternOverlay()),
+          CustomScrollView(
+            slivers: [
+              const SliverToBoxAdapter(child: SizedBox(height: kToolbarHeight)),
+              const SliverToBoxAdapter(child: DeenScrollEdgeFade(isTop: true)),
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.spaceMD,
+                  AppSpacing.spaceSM,
+                  AppSpacing.spaceMD,
+                  AppSpacing.spaceMD,
+                ),
+                sliver: SliverList.list(
+                  children: [
+                    // 1. Header: avatar, greeting, streak chip, goal badge, gear.
+                    greetingAsync.when(
+                      data: (name) => HomeHeader(
+                        userName: name,
+                        greeting: _greeting(now),
+                        greeting2: (name != null && name.trim().isNotEmpty)
+                            ? 'Peace be upon you, ${name.trim()}'
+                            : 'Peace be upon you',
+                        streakCount: streak,
+                        todayCount: todayAyahs,
+                        targetCount: targetAyahs,
+                        goalUnit: 'ayahs',
+                      ),
+                      loading: () => HomeHeader(
+                        userName: null,
+                        greeting: _greeting(now),
+                        greeting2: 'Peace be upon you',
+                        streakCount: streak,
+                        todayCount: todayAyahs,
+                        targetCount: targetAyahs,
+                        goalUnit: 'ayahs',
+                      ),
+                      error: (_, _) => HomeHeader(
+                        userName: null,
+                        greeting: 'Peace be upon you',
+                        greeting2: '',
+                        streakCount: streak,
+                        todayCount: todayAyahs,
+                        targetCount: targetAyahs,
+                        goalUnit: 'ayahs',
+                      ),
                     ),
-                  ),
-                  error: (_, _) => Text(
-                    'Peace be upon you',
-                    style: AppTypography.headlineSmall.copyWith(
-                      color: isDark
-                          ? AppColors.darkOnSurface
-                          : AppColors.textDark,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.spaceLG),
-                // Next Prayer Card - watches clock for live countdown
-                nextPrayerAsync.when(
-                  data: (next) {
-                    final nowClock = clockAsync.value ?? now;
-                    final countdown = _formatCountdown(next.time, nowClock);
-                    return NextPrayerCard(
-                      prayerName: next.name,
-                      prayerTime: next.time,
-                      countdown: countdown,
-                      onViewAll: () => context.push('/prayer-times'),
-                    );
-                  },
-                  loading: () => NextPrayerCard(
-                    prayerName: '-',
-                    prayerTime: null,
-                    countdown: '-',
-                    isLoading: true,
-                    onViewAll: () => context.push('/prayer-times'),
-                  ),
-                  error: (_, _) => NextPrayerCard(
-                    prayerName: '-',
-                    prayerTime: null,
-                    countdown: '-',
-                    isLoading: true,
-                    onViewAll: () => context.push('/prayer-times'),
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.spaceLG),
-                // Daily Goal Ring - flexible unit per CTO 2
-                todayAsync.when(
-                  data: (today) {
-                    final homeData = homeDataAsync.valueOrNull;
-                    final targetAyahs = homeData?.targetAyahs ?? 5;
-                    final targetMinutes = homeData?.targetMinutes ?? 15;
-                    final useMinutes = homeData?.useMinutes ?? true;
-                    final current = useMinutes
-                        ? (today?.minutesRead ?? 0)
-                        : (today?.ayahsRead ?? 0);
-                    final target = useMinutes ? targetMinutes : targetAyahs;
-                    final unit = useMinutes ? 'min' : 'ayahs';
-                    return DailyGoalRing(
-                      current: current,
-                      target: target,
-                      unit: unit,
-                    );
-                  },
-                  loading: () =>
-                      const DailyGoalRing(current: 0, target: 15, unit: 'min'),
-                  error: (_, _) =>
-                      const DailyGoalRing(current: 0, target: 15, unit: 'min'),
-                ),
-                const SizedBox(height: AppSpacing.spaceLG),
-                // Weekly Streak Tracker - actual DailyReads per CTO 3
-                streakAsync.when(
-                  data: (streak) {
-                    final homeData = homeDataAsync.valueOrNull;
-                    final completed =
-                        homeData?.completedByWeekday ?? List.filled(7, false);
-                    return WeeklyStreakTracker(
-                      currentStreak: streak?.currentStreak ?? 0,
-                      completedByWeekday: completed,
+                    const SizedBox(height: AppSpacing.spaceLG),
+                    // 2. Week pills restyled on canvas.
+                    WeeklyStreakTracker(
+                      key: const ValueKey('week-pills'),
+                      currentStreak: streak,
+                      completedByWeekday:
+                          homeData?.completedByWeekday ?? List.filled(7, false),
                       todayWeekday: now.weekday,
-                    );
-                  },
-                  loading: () => WeeklyStreakTracker(
-                    currentStreak: 0,
-                    completedByWeekday: List.filled(7, false),
-                    todayWeekday: now.weekday,
-                  ),
-                  error: (_, _) => WeeklyStreakTracker(
-                    currentStreak: 0,
-                    completedByWeekday: List.filled(7, false),
-                    todayWeekday: now.weekday,
-                  ),
+                      transparent: true,
+                    ),
+                    const SizedBox(height: AppSpacing.spaceLG),
+                    // 3. Goal hero with last-read + Continue.
+                    GoalHeroCard(
+                      key: const ValueKey('goal-hero'),
+                      current: todayAyahs,
+                      target: targetAyahs,
+                      lastSurahId: last?.surahId,
+                      lastAyahId: last?.ayahId,
+                    ),
+                    const SizedBox(height: AppSpacing.spaceLG),
+                    // 4. Quick surah chips.
+                    const SurahChips(key: ValueKey('surah-chips')),
+                    const SizedBox(height: AppSpacing.spaceLG),
+                    // 5. Ayah of the Day (verbatim verified data).
+                    const AyahOfDayCard(key: ValueKey('ayah-of-day')),
+                    const SizedBox(height: AppSpacing.spaceLG),
+                    // 6. Daily challenge dark card.
+                    DailyChallengeCard(
+                      key: const ValueKey('challenge-card'),
+                      targetAyahs: targetAyahs,
+                      todayAyahs: todayAyahs,
+                    ),
+                    const SizedBox(height: AppSpacing.spaceLG),
+                    // 7. Stats row with Today/Week/All tabs.
+                    const StatsRow(key: ValueKey('stats-row')),
+                    const SizedBox(height: AppSpacing.spaceLG),
+                    // 8. Family circles card.
+                    const FamilyCirclesHomeCard(key: ValueKey('family-card')),
+                    const SizedBox(height: AppSpacing.spaceLG),
+                    // 9. Next prayer strip.
+                    const NextPrayerStrip(key: ValueKey('prayer-strip')),
+                    const SizedBox(height: AppSpacing.spaceSM),
+                    // Encouragement microcopy (DEEN 3).
+                    Text(
+                      'Counts are encouragement only; true reward is with Allah.',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: AppColors.textMuted,
+                        fontStyle: FontStyle.italic,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
                 ),
-                const SizedBox(height: AppSpacing.spaceLG),
-                // Hasanat Ticker - subtle scale+fade per CTO 4
-                todayAsync.when(
-                  data: (today) =>
-                      HasanatTicker(todayHasanat: today?.hasanatEarned ?? 0),
-                  loading: () => const HasanatTicker(todayHasanat: 0),
-                  error: (_, _) => const HasanatTicker(todayHasanat: 0),
-                ),
-                const SizedBox(height: AppSpacing.spaceLG),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    onPressed: () => context.push('/family-circles'),
-                    icon: const Icon(Icons.group_outlined),
-                    label: const Text('Family Circles'),
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.spaceXL),
-              ],
-            ),
+              ),
+              const SliverToBoxAdapter(child: DeenScrollEdgeFade(isTop: false)),
+              const SliverToBoxAdapter(child: SizedBox(height: 100)),
+            ],
           ),
         ],
       ),

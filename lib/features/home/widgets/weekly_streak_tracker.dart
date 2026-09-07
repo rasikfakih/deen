@@ -15,6 +15,7 @@ class WeeklyStreakTracker extends ConsumerWidget {
     required this.currentStreak,
     required this.completedByWeekday,
     required this.todayWeekday,
+    this.transparent = false,
   });
 
   /// Overall streak count for label.
@@ -26,6 +27,10 @@ class WeeklyStreakTracker extends ConsumerWidget {
   /// 1 = Monday ... 7 = Sunday for today.
   final int todayWeekday;
 
+  /// When true, renders content without the card container so Design v3
+  /// canvas (or a DeenCard) provides the surface.
+  final bool transparent;
+
   static const _labels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
   @override
@@ -33,136 +38,146 @@ class WeeklyStreakTracker extends ConsumerWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final elderly = ref.watch(elderlyModeProvider).valueOrNull ?? false;
     assert(completedByWeekday.length == 7, 'completedByWeekday must be 7');
+    final content = _content(context, ref, isDark, elderly);
 
     return Semantics(
       label: 'Weekly streak',
       value: currentStreak > 0 ? '$currentStreak day streak' : 'No streak yet',
-      child: Container(
-        padding: const EdgeInsets.all(AppSpacing.spaceMD),
-        decoration: BoxDecoration(
-          color: isDark ? AppColors.darkSurface : Colors.white,
-          borderRadius: BorderRadius.circular(AppSpacing.radiusLG),
-          border: Border.all(
-            color: isDark
-                ? AppColors.darkOutlineVariant
-                : AppColors.lightOutlineVariant,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: isDark ? AppColors.shadowDark : AppColors.shadowLight,
-              blurRadius: AppSpacing.elevationSM,
-              offset: const Offset(0, 2),
+      child: transparent
+          ? content
+          : Container(
+              padding: const EdgeInsets.all(AppSpacing.spaceMD),
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.darkSurface : Colors.white,
+                borderRadius: BorderRadius.circular(AppSpacing.radiusLG),
+                border: Border.all(
+                  color: isDark
+                      ? AppColors.darkOutlineVariant
+                      : AppColors.lightOutlineVariant,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: isDark
+                        ? AppColors.shadowDark
+                        : AppColors.shadowLight,
+                    blurRadius: AppSpacing.elevationSM,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: content,
+            ),
+    );
+  }
+
+  Widget _content(
+    BuildContext context,
+    WidgetRef ref,
+    bool isDark,
+    bool elderly,
+  ) {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Icon(
+              Icons.local_fire_department,
+              size: 18,
+              color: AppColors.goldDark,
+            ),
+            const SizedBox(width: AppSpacing.spaceXS),
+            Text(
+              currentStreak > 0
+                  ? '$currentStreak day streak'
+                  : 'Start your streak today',
+              style: AppTypography.titleMedium.copyWith(
+                color: isDark ? AppColors.darkOnSurface : AppColors.textDark,
+              ),
+            ),
+            const Spacer(),
+            Text(
+              currentStreak >= 7 ? 'on fire!' : 'keep it alive',
+              style: AppTypography.labelSmall.copyWith(
+                color: AppColors.textMuted,
+              ),
             ),
           ],
         ),
-        child: Column(
-          children: [
-            Row(
+        const SizedBox(height: AppSpacing.spaceMD),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: List.generate(7, (i) {
+            final isCompleted = completedByWeekday[i];
+            final isToday = (i + 1) == todayWeekday;
+            final shouldPulse = isToday && !isCompleted;
+
+            Widget pill = Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: isCompleted ? AppColors.gold : Colors.transparent,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: isCompleted
+                      ? AppColors.goldDark
+                      : (isDark
+                            ? AppColors.darkOutline
+                            : AppColors.lightOutline),
+                  width: isToday ? 1.8 : 1,
+                ),
+              ),
+              child: Center(
+                child: isCompleted
+                    ? const Icon(Icons.check, size: 16, color: Colors.white)
+                    : Text(
+                        _labels[i],
+                        style: AppTypography.labelSmall.copyWith(
+                          color: isToday
+                              ? (isDark
+                                    ? AppColors.darkOnSurface
+                                    : AppColors.textDark)
+                              : AppColors.textMuted,
+                          fontWeight: isToday
+                              ? FontWeight.w700
+                              : FontWeight.w500,
+                        ),
+                      ),
+              ),
+            );
+
+            if (shouldPulse && !elderly) {
+              pill = pill
+                  .animate(onPlay: (c) => c.repeat(reverse: true))
+                  .scale(
+                    begin: const Offset(1, 1),
+                    end: const Offset(1.08, 1.08),
+                    duration: 900.ms,
+                    curve: Curves.easeInOut,
+                  )
+                  .then(delay: 100.ms)
+                  .scale(
+                    begin: const Offset(1.08, 1.08),
+                    end: const Offset(1, 1),
+                    duration: 900.ms,
+                  );
+            }
+
+            return Column(
               children: [
-                Icon(
-                  Icons.local_fire_department,
-                  size: 18,
-                  color: AppColors.goldDark,
-                ),
-                const SizedBox(width: AppSpacing.spaceXS),
+                pill,
+                const SizedBox(height: 4),
                 Text(
-                  currentStreak > 0
-                      ? '$currentStreak day streak'
-                      : 'Start your streak today',
-                  style: AppTypography.titleMedium.copyWith(
-                    color: isDark
-                        ? AppColors.darkOnSurface
-                        : AppColors.textDark,
-                  ),
-                ),
-                const Spacer(),
-                Text(
-                  currentStreak >= 7 ? 'on fire!' : 'keep it alive',
+                  _labels[i],
                   style: AppTypography.labelSmall.copyWith(
-                    color: AppColors.textMuted,
+                    color: isToday ? AppColors.goldDark : AppColors.textMuted,
+                    fontWeight: isToday ? FontWeight.w700 : FontWeight.w400,
                   ),
                 ),
               ],
-            ),
-            const SizedBox(height: AppSpacing.spaceMD),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: List.generate(7, (i) {
-                final isCompleted = completedByWeekday[i];
-                final isToday = (i + 1) == todayWeekday;
-                final shouldPulse = isToday && !isCompleted;
-
-                Widget pill = Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: isCompleted ? AppColors.gold : Colors.transparent,
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: isCompleted
-                          ? AppColors.goldDark
-                          : (isDark
-                                ? AppColors.darkOutline
-                                : AppColors.lightOutline),
-                      width: isToday ? 1.8 : 1,
-                    ),
-                  ),
-                  child: Center(
-                    child: isCompleted
-                        ? const Icon(Icons.check, size: 16, color: Colors.white)
-                        : Text(
-                            _labels[i],
-                            style: AppTypography.labelSmall.copyWith(
-                              color: isToday
-                                  ? (isDark
-                                        ? AppColors.darkOnSurface
-                                        : AppColors.textDark)
-                                  : AppColors.textMuted,
-                              fontWeight: isToday
-                                  ? FontWeight.w700
-                                  : FontWeight.w500,
-                            ),
-                          ),
-                  ),
-                );
-
-                if (shouldPulse && !elderly) {
-                  pill = pill
-                      .animate(onPlay: (c) => c.repeat(reverse: true))
-                      .scale(
-                        begin: const Offset(1, 1),
-                        end: const Offset(1.08, 1.08),
-                        duration: 900.ms,
-                        curve: Curves.easeInOut,
-                      )
-                      .then(delay: 100.ms)
-                      .scale(
-                        begin: const Offset(1.08, 1.08),
-                        end: const Offset(1, 1),
-                        duration: 900.ms,
-                      );
-                }
-
-                return Column(
-                  children: [
-                    pill,
-                    const SizedBox(height: 4),
-                    Text(
-                      _labels[i],
-                      style: AppTypography.labelSmall.copyWith(
-                        color: isToday
-                            ? AppColors.goldDark
-                            : AppColors.textMuted,
-                        fontWeight: isToday ? FontWeight.w700 : FontWeight.w400,
-                      ),
-                    ),
-                  ],
-                );
-              }),
-            ),
-          ],
+            );
+          }),
         ),
-      ),
+      ],
     );
   }
 }

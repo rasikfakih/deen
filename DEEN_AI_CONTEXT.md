@@ -144,6 +144,10 @@ Palette:
 - Text dark: #1F1F1F
 - Dark background: #121212
 - Surfaces dark: #1E1B16 family, tuned for WCAG AA contrast
+- Emerald accent: #0E9F6E (emeraldDark #0B6B4C for text on light)
+- Hasanat spark: #FFC25C
+- Canvas night: #0C1512 to #10201A; parchment reader light: #F4EEE1; mushaf night: #16130F
+- Glass light tint: warm #FFF8EE at 0.62 (CTO device-QA ruling)
 
 Typography:
 - Latin UI: Poppins
@@ -169,6 +173,15 @@ Rules:
 - Elderly Mode: reduce blur sigma, disable glow and flex animations.
 - Performance: max one BackdropFilter per screen region, no nested blurs, never animate blur radius, wrap glass zones in RepaintBoundary.
 - QA: scroll edge fade heights are tokens in AppSpacing (hard 24 soft 32) and must be re-evaluated on a physical device; any change updates both AppSpacing and this section in the same commit.
+
+### 8.2 Design v3: Canvas
+
+- Home paints theme-aware canvas gradients (dawn cream + gold glow; night green-black + gold/emerald glows) as opaque BoxDecorations behind scrolling content. No blur on canvas.
+- Girih pattern overlay (`assets/patterns/pattern_star.svg`, NOT in the icon registry) tiles statically at 0.04 light / 0.06 dark, IgnorePointer, RepaintBoundary, semantics-excluded.
+- Card system: DeenCard (opaque, radius 24, soft shadow, top highlight) and DeenHeroCard (gold/emerald/night gradient variants). Content cards are never glass.
+- Glass stays on DeenGlassAppBar + DeenGlassNavBar only. Scroll edge fades required top (under app bar) and bottom (above nav bar) wherever glass meets scrolling content.
+- Elderly Mode scales all v3 modules through the existing text scaler; no new glow or animation paths. New modules carry semantics labels; Arabic lines use RTL directionality.
+- Surah labels stay numeric (Surah N) until the R1.5 checksum-verified surah-metadata pipeline lands; no unverified religious metadata in UI.
 
 ---
 

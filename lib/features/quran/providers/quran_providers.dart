@@ -1,4 +1,6 @@
-﻿import 'package:drift/drift.dart';
+import 'dart:convert';
+
+import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/database/database_providers.dart';
@@ -89,3 +91,77 @@ final updateLastReadProvider =
             );
       };
     });
+
+// ---------------------------------------------------------------------------
+// Recent surahs - last 3 read surah IDs in SettingsCache (local only).
+// IDs only, no names: surah metadata ships in R1.5 (DEEN 8.2).
+// ---------------------------------------------------------------------------
+
+const _recentSurahsKey = 'recent_surahs';
+const _recentSurahsMax = 3;
+
+/// Most-recent-first surah IDs, max 3. Empty when nothing read yet.
+final recentSurahsProvider = FutureProvider<List<int>>((ref) async {
+  final db = ref.watch(deenDatabaseProvider);
+  final row = await (db.select(
+    db.settingsCache,
+  )..where((t) => t.key.equals(_recentSurahsKey))).getSingleOrNull();
+  final raw = row?.value;
+  if (raw == null || raw.isEmpty) return const <int>[];
+  try {
+    final decoded = jsonDecode(raw) as List;
+    return decoded.whereType<int>().take(_recentSurahsMax).toList();
+  } catch (_) {
+    return const <int>[];
+  }
+});
+
+final pushRecentSurahProvider = Provider<Future<void> Function(int surahId)>((
+  ref,
+) {
+  return (int surahId) async {
+    final db = ref.read(deenDatabaseProvider);
+    final row = await (db.select(
+      db.settingsCache,
+    )..where((t) => t.key.equals(_recentSurahsKey))).getSingleOrNull();
+    var ids = <int>[];
+    if (row?.value != null && row!.value!.isNotEmpty) {
+      try {
+        ids = (jsonDecode(row.value!) as List).whereType<int>().toList();
+      } catch (_) {
+        ids = <int>[];
+      }
+    }
+    ids.remove(surahId);
+    ids.insert(0, surahId);
+    final trimmed = ids.take(_recentSurahsMax).toList();
+    await db
+        .into(db.settingsCache)
+        .insertOnConflictUpdate(
+          SettingsCacheCompanion.insert(
+            key: _recentSurahsKey,
+            value: Value(jsonEncode(trimmed)),
+          ),
+        );
+    ref.invalidate(recentSurahsProvider);
+  };
+});
+
+// ---------------------------------------------------------------------------
+// Ayah of the Day - deterministic pick from verified data (DEEN 3).
+// Index = (dayOfYear - 1) % ayahs.length. Verbatim ayah, no generation.
+// ---------------------------------------------------------------------------
+
+final ayahOfDayProvider = FutureProvider<QuranAyah?>((ref) async {
+  final ayahs = await ref.watch(quranDataProvider.future);
+  if (ayahs.isEmpty) return null;
+  final now = DateTime.now();
+  final dayOfYear =
+      DateTime(
+        now.year,
+        now.month,
+        now.day,
+      ).difference(DateTime(now.year, 1, 1)).inDays +
+      1;
+  return ayahs[(dayOfYear - 1) % ayahs.length];
+});
