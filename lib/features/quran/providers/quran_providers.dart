@@ -1,9 +1,8 @@
 ﻿import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../shared/database/database_providers.dart';
 import '../../../shared/database/deen_database.dart';
-import '../../gamification/providers/gamification_providers.dart'
-    show deenDatabaseProvider;
 import '../data/quran_repository.dart';
 
 // ---------------------------------------------------------------------------

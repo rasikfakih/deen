@@ -10,7 +10,8 @@ import 'package:timezone/timezone.dart' as tz;
 
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
-import 'features/settings/providers/settings_providers.dart';
+import 'core/utils/app_constants.dart';
+import 'shared/providers/display_providers.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,17 +27,12 @@ Future<void> main() async {
         .timeout(const Duration(milliseconds: 500), onTimeout: () {}),
   );
 
-  const supabaseUrl = String.fromEnvironment(
-    'SUPABASE_URL',
-    defaultValue: 'https://placeholder.supabase.co',
-  );
-  const supabaseAnonKey = String.fromEnvironment(
-    'SUPABASE_ANON_KEY',
-    defaultValue: 'placeholder-anon-key',
-  );
+  // Guest-first: empty (default) means offline mode, no Supabase.
+  // Inject at build: flutter run --dart-define=SUPABASE_URL=... --dart-define=SUPABASE_ANON_KEY=...
+  const supabaseUrl = AppConstants.supabaseUrl;
+  const supabaseAnonKey = AppConstants.supabaseAnonKey;
 
-  if (supabaseUrl != 'https://placeholder.supabase.co' &&
-      supabaseAnonKey != 'placeholder-anon-key') {
+  if (supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty) {
     try {
       await Supabase.initialize(
         url: supabaseUrl,
@@ -49,7 +45,7 @@ Future<void> main() async {
       );
     }
   } else {
-    debugPrint('Supabase placeholder config, running in guest mode');
+    debugPrint('Supabase not configured, running in guest (offline) mode');
   }
 
   runApp(const ProviderScope(child: DeenApp()));

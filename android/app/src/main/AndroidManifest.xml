@@ -1,4 +1,16 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Network: Supabase sync, Quran audio streaming (R2/CDN), support links.
+         Declared explicitly (plugins also merge INTERNET, but release must not rely on debug manifest). -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Location (WhenInUse only, on-device adhan calc — no background location by design). -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <!-- Notifications: POST_NOTIFICATIONS required on API 33+ at runtime (onboarding requests it).
+         RECEIVE_BOOT_COMPLETED lets us reschedule prayer/reading reminders after reboot.
+         VIBRATE for tasbih + notification haptics. No SCHEDULE_EXACT_ALARM — we use inexactAllowWhileIdle. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <uses-permission android:name="android.permission.VIBRATE"/>
     <application
         android:label="Deen"
         android:name="${applicationName}"

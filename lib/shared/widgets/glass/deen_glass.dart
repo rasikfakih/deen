@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
-import '../../../features/settings/providers/settings_providers.dart';
+import '../../providers/display_providers.dart';
 import 'glass_metrics.dart';
 
 enum DeenGlassVariant { regular, clear }

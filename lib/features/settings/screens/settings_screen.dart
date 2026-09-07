@@ -30,11 +30,70 @@ class SettingsScreen extends ConsumerWidget {
     }
   }
 
+  Future<void> _exportData(BuildContext context, WidgetRef ref) async {
+    try {
+      final service = ref.read(dataExportServiceProvider);
+      final file = await service.exportToFile();
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Export saved: ${file.path}')));
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Export failed: $e')));
+      }
+    }
+  }
+
+  Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete all my data?'),
+        content: const Text(
+          'This permanently deletes goals, reads, streaks, bookmarks, '
+          'and settings on this device. This cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Delete everything'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      await NotificationService.instance.cancelAll();
+    } catch (_) {}
+    try {
+      await ref.read(dataExportServiceProvider).deleteAllLocalData();
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('All local data deleted')));
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Delete failed: $e')));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeAsync = ref.watch(themeModeProvider);
     final elderlyAsync = ref.watch(elderlyModeProvider);
     final methodAsync = ref.watch(prayerMethodProvider);
+    final analyticsAsync = ref.watch(analyticsOptInProvider);
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -193,6 +252,44 @@ class SettingsScreen extends ConsumerWidget {
               onPressed: () => context.push('/support'),
               icon: const Icon(Icons.favorite_border),
               label: const Text('Support the App'),
+            ),
+          ),
+          const Divider(height: AppSpacing.spaceXL),
+          Text('Privacy & Data', style: AppTypography.titleMedium),
+          const SizedBox(height: AppSpacing.spaceSM),
+          analyticsAsync.when(
+            data: (enabled) => SwitchListTile(
+              title: Text(
+                'Analytics (opt-in)',
+                style: AppTypography.titleMedium,
+              ),
+              subtitle: Text(
+                'Minimal, anonymous. Never logs verses read or search text.',
+                style: AppTypography.bodySmall,
+              ),
+              value: enabled,
+              onChanged: (v) => saveAnalyticsOptIn(ref, v),
+            ),
+            loading: () => const SwitchListTile(
+              title: Text('Analytics (opt-in)'),
+              value: false,
+              onChanged: null,
+            ),
+            error: (_, _) => const Text('Error loading analytics setting'),
+          ),
+          const SizedBox(height: AppSpacing.spaceSM),
+          OutlinedButton.icon(
+            onPressed: () => _exportData(context, ref),
+            icon: const Icon(Icons.download_outlined),
+            label: const Text('Export my data'),
+          ),
+          const SizedBox(height: AppSpacing.spaceSM),
+          OutlinedButton.icon(
+            onPressed: () => _confirmDelete(context, ref),
+            icon: const Icon(Icons.delete_outline, color: Colors.red),
+            label: const Text(
+              'Delete my data',
+              style: TextStyle(color: Colors.red),
             ),
           ),
         ],

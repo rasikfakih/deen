@@ -14,7 +14,7 @@ import '../providers/quran_providers.dart';
 /// Beautiful, distraction-free text-mode Quran reader.
 ///
 /// Sacred layer per DEEN 8: calm, spacious, minimal motion, zero clutter.
-/// Shows Arabic Uthmani (Tajawal/Amiri placeholder) + English Sahih Intl
+/// Shows Arabic Uthmani (Tajawal, Amiri/KFGQPC when provisioned) + English Sahih Intl
 /// below, grouped by Surah. Verbatim data only via QuranRepository.
 /// Bookmark via AppBar, last-read auto-saves, hasanat via gamification timer.
 class QuranReaderScreen extends ConsumerStatefulWidget {
@@ -159,7 +159,34 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> {
         ),
         data: (ayahs) {
           if (ayahs.isEmpty) {
-            return const Center(child: Text('No data'));
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.spaceLG),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.menu_book_outlined,
+                      size: 48,
+                      color: AppColors.textMuted,
+                      semanticLabel: 'Empty Quran data',
+                    ),
+                    const SizedBox(height: AppSpacing.spaceMD),
+                    Text(
+                      'Quran text is not available yet',
+                      style: Theme.of(context).textTheme.titleMedium,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: AppSpacing.spaceXS),
+                    Text(
+                      'Your offline Quran data seems to be missing. Reinstalling the app restores it — your progress stays on this device.',
+                      style: Theme.of(context).textTheme.bodySmall,
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            );
           }
           // Restore last read once.
           ref.listen(lastReadProvider, (prev, next) {
@@ -356,7 +383,7 @@ class _AyahCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: AppSpacing.spaceSM),
-            // Arabic - RTL, Tajawal placeholder via app_typography
+            // Arabic - RTL, Tajawal via app_typography
             Directionality(
               textDirection: TextDirection.rtl,
               child: Text(

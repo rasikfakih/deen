@@ -9,7 +9,7 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../shared/widgets/glass/deen_glass_app_bar.dart';
 import '../../gamification/providers/gamification_providers.dart';
-import '../../settings/providers/settings_providers.dart';
+import '../../../shared/providers/display_providers.dart';
 
 final tasbihCountProvider = StateProvider<int>((ref) => 0);
 final tasbihTargetProvider = StateProvider<int>((ref) => 33);
@@ -104,63 +104,68 @@ class TasbihScreen extends ConsumerWidget {
               minHeight: 6,
             ),
             const Spacer(),
-            // Large tap target
-            GestureDetector(
-              onTap: () async {
-                if (!elderly) HapticFeedback.lightImpact();
-                final current = ref.read(tasbihCountProvider.notifier).state;
-                final tgt = ref.read(tasbihTargetProvider);
-                final newCount = current + 1;
-                if (newCount >= tgt && tgt > 0) {
-                  // Celebration will be triggered by rebuild with ValueKey + animate
-                  ref.read(tasbihCountProvider.notifier).state = 0;
-                  ref.read(tasbihRoundsProvider.notifier).state =
-                      ref.read(tasbihRoundsProvider) + 1;
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('MashaAllah - $tgt completed!'),
-                        duration: const Duration(seconds: 1),
+            // Large tap target (48dp+; full 200px circle)
+            Semantics(
+              button: true,
+              label: 'Tasbih counter',
+              value: '$count of $target, $rounds rounds completed',
+              child: GestureDetector(
+                onTap: () async {
+                  if (!elderly) HapticFeedback.lightImpact();
+                  final current = ref.read(tasbihCountProvider.notifier).state;
+                  final tgt = ref.read(tasbihTargetProvider);
+                  final newCount = current + 1;
+                  if (newCount >= tgt && tgt > 0) {
+                    // Celebration will be triggered by rebuild with ValueKey + animate
+                    ref.read(tasbihCountProvider.notifier).state = 0;
+                    ref.read(tasbihRoundsProvider.notifier).state =
+                        ref.read(tasbihRoundsProvider) + 1;
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('MashaAllah - $tgt completed!'),
+                          duration: const Duration(seconds: 1),
+                        ),
+                      );
+                    }
+                    // Gamification: hasanat only, no streak (critical correction)
+                    final repo = ref.read(gamificationRepositoryProvider);
+                    await repo.logDhikrSession(count: tgt);
+                  } else {
+                    ref.read(tasbihCountProvider.notifier).state = newCount;
+                  }
+                },
+                child: Builder(
+                  builder: (context) {
+                    final circle = Container(
+                      width: 200,
+                      height: 200,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: AppGradients.goldFlow,
+                        boxShadow: [
+                          BoxShadow(
+                            color: elderly
+                                ? Colors.black.withValues(alpha: 0.12)
+                                : AppColors.gold.withValues(alpha: 0.32),
+                            blurRadius: elderly ? 8 : 18,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.touch_app,
+                        size: 64,
+                        color: Colors.white,
                       ),
                     );
-                  }
-                  // Gamification: hasanat only, no streak (critical correction)
-                  final repo = ref.read(gamificationRepositoryProvider);
-                  await repo.logDhikrSession(count: tgt);
-                } else {
-                  ref.read(tasbihCountProvider.notifier).state = newCount;
-                }
-              },
-              child: Builder(
-                builder: (context) {
-                  final circle = Container(
-                    width: 200,
-                    height: 200,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: AppGradients.goldFlow,
-                      boxShadow: [
-                        BoxShadow(
-                          color: elderly
-                              ? Colors.black.withValues(alpha: 0.12)
-                              : AppColors.gold.withValues(alpha: 0.32),
-                          blurRadius: elderly ? 8 : 18,
-                          offset: const Offset(0, 6),
-                        ),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.touch_app,
-                      size: 64,
-                      color: Colors.white,
-                    ),
-                  );
-                  if (elderly) return circle;
-                  return circle.animate().scale(
-                    duration: 300.ms,
-                    curve: Curves.easeOut,
-                  );
-                },
+                    if (elderly) return circle;
+                    return circle.animate().scale(
+                      duration: 300.ms,
+                      curve: Curves.easeOut,
+                    );
+                  },
+                ),
               ),
             ),
             const Spacer(),

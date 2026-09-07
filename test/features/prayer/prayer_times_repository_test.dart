@@ -128,16 +128,32 @@ void main() {
       expect(next.name, 'Fajr');
     });
 
-    test('Hijri conversion plausible', () {
-      final date = DateTime(2024, 3, 11);
-      final times = repo.getPrayerTimes(
-        latitude: 21.3891,
-        longitude: 39.8579,
-        date: date,
-      );
-      // Ramadan 1445 is March 2024
-      expect(times.hijriDate.month, inInclusiveRange(1, 12));
-      expect(times.hijriDate.day, inInclusiveRange(1, 30));
+    test('Hijri conversion matches known Ramadan anchors (±1 day)', () {
+      // Tabular calendar vs observed (moon-sighting) dates.
+      HijriDate hijri(DateTime d) => HijriDate.fromGregorian(d);
+
+      // Ramadan 1, 1445 observed 2024-03-11.
+      var h = hijri(DateTime(2024, 3, 11));
+      expect(h.year, 1445);
+      expect(h.month, 9);
+      expect(h.day, inInclusiveRange(1, 2));
+
+      // Ramadan 1, 1446 observed 2025-03-01.
+      h = hijri(DateTime(2025, 3, 1));
+      expect(h.year, 1446);
+      expect(h.month, 9);
+      expect(h.day, inInclusiveRange(1, 2));
+
+      // Ramadan 1, 1447 expected 2026-02-18.
+      h = hijri(DateTime(2026, 2, 18));
+      expect(h.year, 1447);
+      expect(h.month, 9);
+      expect(h.day, inInclusiveRange(1, 2));
+
+      // Bounds hold for any date.
+      h = hijri(DateTime(2026, 9, 7));
+      expect(h.month, inInclusiveRange(1, 12));
+      expect(h.day, inInclusiveRange(1, 30));
     });
   });
 }

@@ -78,31 +78,19 @@ class SyncRepository {
     final userId = client.auth.currentUser?.id;
     if (userId == null) return;
 
+    // Conflict resolution is local-first: DailyReads/Streaks computed on-device
+    // by GamificationRepository are authoritative (offline-first, DEEN 4).
+    // weekly_stats in Supabase is a read-only aggregate mirror for family
+    // leaderboards — we never overwrite the local streak from it (the table
+    // has total_minutes/total_ayahs only, no streak column). Highest-streak
+    // logic lives in checkAndUpdateStreak, not here.
     try {
-      final remote = await client
+      await client
           .from('weekly_stats')
           .select('total_minutes, total_ayahs, week_start_date')
           .eq('user_id', userId)
           .maybeSingle();
-      if (remote != null) {
-        // Example merge: take highest streak via separate table if exists
-        // For now, handle streaks table if a remote streaks table were present
-        // This is a placeholder for conflict resolution: highest streak wins
-        final remoteStreak = remote['streak'] as int?;
-        if (remoteStreak != null) {
-          final local = await db.streak;
-          if (local != null && remoteStreak > local.currentStreak) {
-            await (db.update(
-              db.streaks,
-            )..where((t) => t.id.equals(local.id))).write(
-              StreaksCompanion(
-                currentStreak: Value(remoteStreak),
-                longestStreak: Value(remoteStreak),
-              ),
-            );
-          }
-        }
-      }
+      // Intentionally no local write: cloud aggregate is for leaderboards.
     } catch (_) {}
 
     // Bookmarks pull

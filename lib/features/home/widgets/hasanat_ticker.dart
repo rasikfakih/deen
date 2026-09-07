@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
-import '../../settings/providers/settings_providers.dart';
+import '../../../shared/providers/display_providers.dart';
 
 /// Playful hasanat ticker with subtle scale+fade on value change.
 /// Includes mandatory microcopy per DEEN 3.

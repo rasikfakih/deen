@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Branded splash (v21+): cream background + centered icon. See drawable/launch_background.xml. -->
+<!-- Dark-mode splash: deep surface (#121212) + centered icon. Matches AppColors.dark. -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:drawable="#F9F6F0" />
+    <item android:drawable="#121212" />
 
     <item>
         <bitmap

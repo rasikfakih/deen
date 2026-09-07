@@ -8,7 +8,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:deen/core/theme/app_gradients.dart';
 import 'package:deen/features/settings/providers/settings_providers.dart';
 import 'package:deen/shared/database/deen_database.dart';
-import 'package:deen/features/gamification/providers/gamification_providers.dart';
 import 'package:deen/shared/widgets/glass/deen_glass.dart';
 import 'package:deen/shared/widgets/glass/glass_metrics.dart';
 
