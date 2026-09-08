@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/database/database_providers.dart';
+import '../../prayer/data/prayer_times_repository.dart';
 
 /// Design v3 Home stats (DEEN 8.2). Sums of verified DailyReads rows only.
 
@@ -36,6 +37,33 @@ String _fmtDate(DateTime d) {
 DateTime mondayOfWeek(DateTime now) {
   final date = DateTime(now.year, now.month, now.day);
   return date.subtract(Duration(days: now.weekday - 1));
+}
+
+const _gregorianMonths = <String>[
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+];
+
+/// Header subline: numeric Hijri (tabular, display approximation) plus
+/// Gregorian date, e.g. "1447-09-01 • 18 Feb 2026". Hijri stays numeric:
+/// month names wait for verified metadata (DEEN 8.2).
+String hijriGregorianLabel(DateTime now) {
+  final h = HijriDate.fromGregorian(now);
+  final hy = h.year.toString().padLeft(4, '0');
+  final hm = h.month.toString().padLeft(2, '0');
+  final hd = h.day.toString().padLeft(2, '0');
+  final gm = _gregorianMonths[now.month - 1];
+  return '$hy-$hm-$hd • ${now.day} $gm ${now.year}';
 }
 
 /// Sums DailyReads for Monday..Sunday of the current week.

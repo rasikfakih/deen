@@ -7,6 +7,7 @@ import '../../../shared/services/notification_service.dart';
 
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/utils/screen_insets.dart';
 import '../../../shared/widgets/glass/deen_glass_app_bar.dart';
 import '../providers/settings_providers.dart';
 
@@ -99,9 +100,9 @@ class SettingsScreen extends ConsumerWidget {
       extendBodyBehindAppBar: true,
       appBar: const DeenGlassAppBar(title: 'Settings'),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(
+        padding: EdgeInsets.fromLTRB(
           AppSpacing.spaceMD,
-          kToolbarHeight + AppSpacing.spaceMD,
+          topContentPad(context),
           AppSpacing.spaceMD,
           100,
         ),

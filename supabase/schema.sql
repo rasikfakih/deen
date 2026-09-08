@@ -80,6 +80,8 @@ create table if not exists weekly_stats (
   week_start_date date not null,
   total_minutes int default 0,
   total_ayahs int default 0,
+  total_hasanat int default 0,
+  current_streak int default 0,
   primary key (user_id, week_start_date)
 );
 
@@ -103,6 +105,49 @@ create policy "Circle members can read leaderboard" on weekly_stats
     exists (
       select 1 from circle_members cm
       where cm.user_id = weekly_stats.user_id
+      and exists (
+        select 1 from circle_members my
+        where my.user_id = auth.uid()
+        and my.circle_id = cm.circle_id
+      )
+    )
+  );
+
+-- Daily stats: per user per day (Today tab). RLS mirrors weekly_stats;
+-- see supabase/migrations/20260908000000_leaderboard_scope.sql.
+create table if not exists daily_stats (
+  user_id uuid references auth.users(id) on delete cascade,
+  date date not null,
+  total_minutes int default 0,
+  total_ayahs int default 0,
+  total_hasanat int default 0,
+  primary key (user_id, date)
+);
+
+alter table daily_stats enable row level security;
+
+drop policy if exists "Users can read own daily stats" on daily_stats;
+create policy "Users can read own daily stats" on daily_stats
+  for select using (auth.uid() = user_id);
+
+drop policy if exists "Users can upsert own daily stats" on daily_stats;
+create policy "Users can upsert own daily stats" on daily_stats
+  for insert with check (auth.uid() = user_id);
+
+drop policy if exists "Users can update own daily stats" on daily_stats;
+create policy "Users can update own daily stats" on daily_stats
+  for update using (auth.uid() = user_id);
+
+drop policy if exists "Users can delete own daily stats" on daily_stats;
+create policy "Users can delete own daily stats" on daily_stats
+  for delete using (auth.uid() = user_id);
+
+drop policy if exists "Circle members can read daily leaderboard" on daily_stats;
+create policy "Circle members can read daily leaderboard" on daily_stats
+  for select using (
+    exists (
+      select 1 from circle_members cm
+      where cm.user_id = daily_stats.user_id
       and exists (
         select 1 from circle_members my
         where my.user_id = auth.uid()

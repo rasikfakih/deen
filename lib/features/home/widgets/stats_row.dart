@@ -5,6 +5,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../shared/widgets/deen_card.dart';
+import '../../../shared/widgets/icons/deen_symbol_effects.dart';
 import '../../gamification/providers/gamification_providers.dart';
 import '../providers/home_stats_providers.dart';
 
@@ -26,7 +27,7 @@ class StatsRow extends ConsumerWidget {
       StatsRange.week => week,
       StatsRange.all => all,
     };
-    if (totals == null) return '–';
+    if (totals == null) return '0';
     return '${pick(totals)}';
   }
 
@@ -96,15 +97,27 @@ class StatsRow extends ConsumerWidget {
                       ),
                       child: Column(
                         children: [
-                          Text(
-                            cards[i].value,
-                            style: AppTypography.titleLarge.copyWith(
-                              color: isDark
-                                  ? AppColors.darkOnSurface
-                                  : AppColors.textDark,
-                              fontWeight: FontWeight.w700,
+                          // Hasanat spark: shimmer replays when the value rises.
+                          if (cards[i].label == 'Hasanat')
+                            DeenAnimatedIcon(
+                              effect: DeenSymbolEffect.shimmer,
+                              replayKey: cards[i].value,
+                              child: Text(
+                                cards[i].value,
+                                style: AppTypography.displayNumerals.copyWith(
+                                  color: AppColors.goldDark,
+                                ),
+                              ),
+                            )
+                          else
+                            Text(
+                              cards[i].value,
+                              style: AppTypography.displayNumerals.copyWith(
+                                color: isDark
+                                    ? AppColors.darkOnSurface
+                                    : AppColors.textDark,
+                              ),
                             ),
-                          ),
                           const SizedBox(height: 2),
                           Text(
                             cards[i].label,

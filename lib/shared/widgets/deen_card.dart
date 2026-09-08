@@ -99,12 +99,41 @@ class DeenHeroCard extends StatelessWidget {
         boxShadow: const [
           BoxShadow(
             color: AppColors.shadowDark,
-            blurRadius: AppSpacing.elevationSM,
-            offset: Offset(0, 2),
+            blurRadius: AppSpacing.elevationLG,
+            offset: Offset(0, 4),
           ),
         ],
       ),
       child: child,
+    );
+  }
+}
+
+/// Radial gold glow spot behind a primary element (dial, orb).
+/// Paint-only DecoratedBox; size yourself with SizedBox/Positioned.
+class DeenGlowSpot extends StatelessWidget {
+  const DeenGlowSpot({super.key, this.diameter = 280, this.opacity = 0.25});
+
+  final double diameter;
+  final double opacity;
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: Container(
+        width: diameter,
+        height: diameter,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: RadialGradient(
+            colors: [
+              AppColors.gold.withValues(alpha: opacity),
+              AppColors.gold.withValues(alpha: 0.0),
+            ],
+            stops: const [0.0, 1.0],
+          ),
+        ),
+      ),
     );
   }
 }

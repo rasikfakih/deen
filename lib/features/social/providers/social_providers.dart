@@ -140,6 +140,40 @@ final circleMemberCountProvider = FutureProvider.family<int, String>((
   }
 });
 
+/// Leaderboard scope tabs for rich rows (Design v5 Phase 8).
+enum BoardRange { today, week, all }
+
+final boardRangeProvider = StateProvider<BoardRange>((ref) => BoardRange.week);
+
+/// Today tab rows from daily_stats. Empty on pre-push backends
+/// (callers show the Sync CTA state, never a crash).
+final todayLeaderboardProvider =
+    FutureProvider.family<List<Map<String, dynamic>>, String>((
+      ref,
+      circleId,
+    ) async {
+      final service = ref.watch(supabaseServiceProvider);
+      try {
+        return await service.getTodayLeaderboard(circleId);
+      } catch (_) {
+        return const [];
+      }
+    });
+
+/// All-time tab rows aggregated client-side from weekly_stats.
+final allTimeLeaderboardProvider =
+    FutureProvider.family<List<Map<String, dynamic>>, String>((
+      ref,
+      circleId,
+    ) async {
+      final service = ref.watch(supabaseServiceProvider);
+      try {
+        return await service.getAllTimeLeaderboard(circleId);
+      } catch (_) {
+        return const [];
+      }
+    });
+
 /// Returns human readable "Last updated X ago" for cached leaderboard.
 final lastLeaderboardUpdatedProvider = FutureProvider.family<String?, String>((
   ref,

@@ -147,7 +147,9 @@ Palette:
 - Emerald accent: #0E9F6E (emeraldDark #0B6B4C for text on light)
 - Hasanat spark: #FFC25C
 - Canvas night: #0C1512 to #10201A; parchment reader light: #F4EEE1; mushaf night: #16130F
-- Glass light tint: warm #FFF8EE at 0.62 (CTO device-QA ruling)
+- Glass nav tint v5: white 0.03 light / black 0.03 dark (reverses the warm
+  0.62 tint for the dense canvas; definition via sheen border, specular
+  line, shadow; guarded by the nav visibility test)
 
 Typography:
 - Latin UI: Poppins
@@ -166,6 +168,7 @@ Rules:
 ### 8.1 Design v2: Liquid Glass
 
 - Glass on navigation layer only (bars, floating controls, sheets). Never on content lists. The Quran reader screen must remain calm with no glass over the ayah list.
+- v5 nav bar: ultra-transparent 3% theme-aware base (white light / black dark), BackdropFilter sigma 16 (9.6 elderly), diffuse gold indicator wash 0.18 + blur 12, 1px specular top line white 0.22, quintic transitions, RepaintBoundary kept, exactly one filter, no nesting.
 - Never stack glass on glass. Elements above a glass bar use gradient fills.
 - Regular glass variant by default. Clear variant only over media-rich content and must auto-add a dimming layer.
 - Emulate lensing with a specular top highlight and gradient edge border, not plain blur.
@@ -182,6 +185,11 @@ Rules:
 - Glass stays on DeenGlassAppBar + DeenGlassNavBar only. Scroll edge fades required top (under app bar) and bottom (above nav bar) wherever glass meets scrolling content.
 - Elderly Mode scales all v3 modules through the existing text scaler; no new glow or animation paths. New modules carry semantics labels; Arabic lines use RTL directionality.
 - Surah labels stay numeric (Surah N) until the R1.5 checksum-verified surah-metadata pipeline lands; no unverified religious metadata in UI.
+
+### 8.3 Follow-ups (temporary, remove when done)
+
+- Text scaler clamp 1.3 (main.dart): remove once the overflow matrix (320x480, 1280x800, landscape) passes at 1.5. Elderly 1.2 path is permanent.
+- R1.5 surah-metadata pipeline is the precondition for named surah labels before R2.
 
 ---
 

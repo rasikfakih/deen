@@ -1,12 +1,17 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/utils/app_constants.dart';
+import '../../../core/utils/screen_insets.dart';
 import '../../../shared/widgets/glass/deen_glass_app_bar.dart';
+import '../../../shared/widgets/icons/deen_symbol_effects.dart';
+import '../../audio/providers/audio_providers.dart';
 import '../../gamification/providers/gamification_providers.dart';
 import '../data/quran_repository.dart';
 import '../providers/quran_providers.dart';
@@ -26,35 +31,23 @@ class QuranReaderScreen extends ConsumerStatefulWidget {
 
 class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> {
   final ScrollController _scrollController = ScrollController();
-  Timer? _readingTimer;
-  int _ayahsSeenThisMinute = 0;
+
+  /// Single source of truth for the reading session (addendum E): the set
+  /// of tapped ayah keys plus the open timestamp. Scroll logging was removed
+  /// so awards can never double-count. Only I'm Done commits, once.
+  final Set<String> _sessionAyahKeys = {};
+  late DateTime _sessionStart;
   QuranAyah? _currentAyah;
   bool _hasRestoredLastRead = false;
+  bool _loopEnabled = false;
+  bool _justCommitted = false;
+  bool _committing = false;
 
   @override
   void initState() {
     super.initState();
+    _sessionStart = DateTime.now();
     _scrollController.addListener(_onScroll);
-    // Hasanat timer - every 60s logs 1 minute + ayahs seen (sacred screen, no celebrations).
-    // Skip timer in widget tests to avoid pumpAndSettle timeout (Timer.periodic).
-    final isTest = WidgetsBinding.instance.runtimeType.toString().contains(
-      'Test',
-    );
-    if (isTest) return;
-    _readingTimer = Timer.periodic(const Duration(seconds: 60), (_) {
-      if (!mounted) return;
-      final repo = ref.read(gamificationRepositoryProvider);
-      // Count encouragement only; true reward is with Allah.
-      unawaited(
-        repo
-            .logReadingSession(
-              minutes: 1,
-              ayahs: _ayahsSeenThisMinute.clamp(1, 10),
-            )
-            .then((_) => repo.checkAndUpdateStreak()),
-      );
-      _ayahsSeenThisMinute = 0;
-    });
   }
 
   void _onScroll() {
@@ -64,9 +57,155 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> {
 
   @override
   void dispose() {
-    _readingTimer?.cancel();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  /// Registers a read ayah in the session ledger (tap or jump target).
+  void _registerAyah(QuranAyah ayah) {
+    _sessionAyahKeys.add(ayah.key);
+    _currentAyah = ayah;
+  }
+
+  /// I'm Done: the ONLY commit point. Minutes from elapsed open time,
+  /// ayahs from unique tapped keys. Preview rate (Next button) always
+  /// equals this base rate: AppConstants.hasanatPerAyah per ayah.
+  Future<void> _commitSession() async {
+    if (_committing) return;
+    if (_sessionAyahKeys.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Tap an ayah you read first, then press Done.'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+      return;
+    }
+    setState(() => _committing = true);
+    try {
+      final repo = ref.read(gamificationRepositoryProvider);
+      final elapsed = DateTime.now().difference(_sessionStart);
+      // Count encouragement only; true reward is with Allah.
+      await repo.logReadingSession(
+        minutes: elapsed.inMinutes.clamp(1, 24 * 60),
+        ayahs: _sessionAyahKeys.length.clamp(1, 6236),
+      );
+      await repo.checkAndUpdateStreak();
+      _sessionAyahKeys.clear();
+      _sessionStart = DateTime.now();
+      if (mounted) {
+        setState(() => _justCommitted = true);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Session saved — mashaAllah, keep going.'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+        Timer(const Duration(seconds: 2), () {
+          if (mounted) setState(() => _justCommitted = false);
+        });
+      }
+    } finally {
+      if (mounted) setState(() => _committing = false);
+    }
+  }
+
+  /// Surah-level playback (honest R1 wiring; ayah-level needs timestamped
+  /// R2 assets). Streams this surah's file from our CDN or offline cache.
+  Future<void> _playSurah(int surahId) async {
+    try {
+      await ref.read(audioServiceProvider).playSurah(surahId);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Playing Surah $surahId'),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Audio unavailable offline: $e'),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _toggleRepeat() async {
+    final service = ref.read(audioServiceProvider);
+    if (_loopEnabled) {
+      await service.setLoopOff();
+    } else {
+      await service.setLoopOne();
+    }
+    if (mounted) setState(() => _loopEnabled = !_loopEnabled);
+  }
+
+  /// Clipboard share: verbatim ayah + translation + reference (addendum E).
+  Future<void> _shareAyah(BuildContext context, QuranAyah ayah) async {
+    final text =
+        '${ayah.arabic}\n${ayah.english}\nSurah ${ayah.surahId} • Ayah ${ayah.ayahId}';
+    await Clipboard.setData(ClipboardData(text: text));
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Ayah copied'),
+          duration: Duration(seconds: 1),
+        ),
+      );
+    }
+  }
+
+  /// First ayah index per surah, computed from verified data at runtime
+  /// (no metadata file needed; counts are structural, not content).
+  static Map<int, int> _surahStarts(List<QuranAyah> ayahs) {
+    final starts = <int, int>{};
+    for (var i = 0; i < ayahs.length; i++) {
+      starts.putIfAbsent(ayahs[i].surahId, () => i);
+    }
+    return starts;
+  }
+
+  void _scrollToIndex(int index) {
+    if (!_scrollController.hasClients) return;
+    final offset = (index * 140).toDouble().clamp(
+      0.0,
+      _scrollController.position.maxScrollExtent,
+    );
+    _scrollController.animateTo(
+      offset,
+      duration: const Duration(milliseconds: 350),
+      curve: Curves.easeInOut,
+    );
+  }
+
+  Future<void> _jumpToSurah(List<QuranAyah> ayahs, int surahId) async {
+    final idx = _surahStarts(ayahs)[surahId];
+    if (idx == null) return;
+    final ayah = ayahs[idx];
+    _registerAyah(ayah);
+    await _updateLastRead(ayah);
+    if (mounted) {
+      setState(() {});
+      _scrollToIndex(idx);
+    }
+  }
+
+  /// Previous/next surah jumps. Jump targets register in the session
+  /// ledger (single source); Next previews the per-ayah base rate.
+  Future<void> _jumpSurah(List<QuranAyah> ayahs, int dir) async {
+    final starts = _surahStarts(ayahs);
+    final ordered = starts.keys.toList()..sort();
+    final currentSurah = _currentAyah?.surahId ?? ordered.first;
+    var pos = ordered.indexOf(currentSurah);
+    pos = (pos + dir).clamp(0, ordered.length - 1);
+    await _jumpToSurah(ayahs, ordered[pos]);
   }
 
   Future<void> _toggleBookmark(QuranAyah ayah) async {
@@ -90,9 +229,7 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> {
 
     return Scaffold(
       extendBodyBehindAppBar: true,
-      backgroundColor: isDark
-          ? AppColors.darkBackgroundSemantic
-          : AppColors.lightBackground,
+      backgroundColor: isDark ? AppColors.mushafNight : AppColors.parchment,
       appBar: DeenGlassAppBar(
         title: 'Al-Quran - Text Mode',
         actions: [
@@ -103,8 +240,12 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> {
                   current != null && bookmarkedKeys.contains(current.key);
               return IconButton(
                 tooltip: isBookmarked ? 'Remove bookmark' : 'Bookmark ayah',
-                icon: Icon(
-                  isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                icon: DeenAnimatedIcon(
+                  effect: DeenSymbolEffect.bounce,
+                  replayKey: isBookmarked,
+                  child: Icon(
+                    isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                  ),
                 ),
                 color: isBookmarked ? AppColors.gold : null,
                 onPressed: current == null
@@ -220,6 +361,15 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> {
 
           return Column(
             children: [
+              // Top-leak guard: first content clears the glass app bar.
+              SizedBox(height: topContentPad(context)),
+              // Surah selector + position progress (numeric until R1.5).
+              _SurahSelectorRow(
+                ayahs: ayahs,
+                current: _currentAyah,
+                onSelect: _jumpToSurah,
+              ),
+              _ReaderProgressBar(ayahs: ayahs, current: _currentAyah),
               // Microcopy per DEEN 3 / 10
               Container(
                 width: double.infinity,
@@ -251,24 +401,30 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> {
                         ? ayahs[index - 1].surahId
                         : null;
                     final isSurahHeader = prevSurah != ayah.surahId;
-                    // Track visible ayah for bookmark/lastRead (debounced)
-                    if (index % 5 == 0) {
-                      // Approximate ayahs seen for gamification
-                      _ayahsSeenThisMinute++;
-                    }
                     return _AyahCard(
                       ayah: ayah,
                       isSurahHeader: isSurahHeader,
                       isBookmarked: bookmarkedKeys.contains(ayah.key),
+                      loopEnabled: _loopEnabled,
                       onTap: () {
-                        _currentAyah = ayah;
+                        _registerAyah(ayah);
                         _updateLastRead(ayah);
                         setState(() {});
                       },
                       onBookmarkToggle: () => _toggleBookmark(ayah),
+                      onPlaySurah: () => _playSurah(ayah.surahId),
+                      onToggleRepeat: _toggleRepeat,
+                      onShare: () => _shareAyah(context, ayah),
                     );
                   },
                 ),
+              ),
+              _ReaderActionBar(
+                onPrevious: () => _jumpSurah(ayahs, -1),
+                onNext: () => _jumpSurah(ayahs, 1),
+                onDone: _commitSession,
+                committing: _committing,
+                justCommitted: _justCommitted,
               ),
             ],
           );
@@ -283,133 +439,471 @@ class _AyahCard extends StatelessWidget {
     required this.ayah,
     required this.isSurahHeader,
     required this.isBookmarked,
+    required this.loopEnabled,
     required this.onTap,
     required this.onBookmarkToggle,
+    required this.onPlaySurah,
+    required this.onToggleRepeat,
+    required this.onShare,
   });
 
   final QuranAyah ayah;
   final bool isSurahHeader;
   final bool isBookmarked;
+  final bool loopEnabled;
   final VoidCallback onTap;
   final VoidCallback onBookmarkToggle;
+  final VoidCallback onPlaySurah;
+  final VoidCallback onToggleRepeat;
+  final VoidCallback onShare;
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-          border: Border(
-            bottom: BorderSide(
-              color: isDark
-                  ? AppColors.darkOutlineVariant
-                  : AppColors.lightOutlineVariant,
-              width: 0.5,
-            ),
-          ),
-        ),
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.spaceMD,
-          vertical: AppSpacing.spaceMD,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (isSurahHeader) ...[
-              Container(
-                margin: const EdgeInsets.only(bottom: AppSpacing.spaceSM),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.spaceMD,
-                  vertical: AppSpacing.spaceXS,
-                ),
-                decoration: BoxDecoration(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+              border: Border(
+                bottom: BorderSide(
                   color: isDark
-                      ? AppColors.darkSurfaceVariant
-                      : AppColors.creamDark,
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusSM),
-                ),
-                child: Text(
-                  'Surah ${ayah.surahId}',
-                  style: AppTypography.labelMedium.copyWith(
-                    color: isDark
-                        ? AppColors.darkOnSurface
-                        : AppColors.textDark,
-                    letterSpacing: 1.2,
-                  ),
-                  textAlign: TextAlign.center,
+                      ? AppColors.darkOutlineVariant
+                      : AppColors.lightOutlineVariant,
+                  width: 0.5,
                 ),
               ),
-            ],
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            ),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.spaceMD,
+              vertical: AppSpacing.spaceMD,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.spaceSM,
-                    vertical: AppSpacing.spaceXS,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? AppColors.darkSurfaceVariant
-                        : AppColors.lightSurfaceVariant,
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-                    border: Border.all(
+                if (isSurahHeader) ...[
+                  Container(
+                    margin: const EdgeInsets.only(bottom: AppSpacing.spaceSM),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.spaceMD,
+                      vertical: AppSpacing.spaceXS,
+                    ),
+                    decoration: BoxDecoration(
                       color: isDark
-                          ? AppColors.darkOutline
-                          : AppColors.lightOutline,
+                          ? AppColors.darkSurfaceVariant
+                          : AppColors.creamDark,
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusSM),
+                    ),
+                    child: Text(
+                      'Surah ${ayah.surahId}',
+                      style: AppTypography.labelMedium.copyWith(
+                        color: isDark
+                            ? AppColors.darkOnSurface
+                            : AppColors.textDark,
+                        letterSpacing: 1.2,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
                   ),
-                  child: Text(
-                    '${ayah.surahId}:${ayah.ayahId}',
-                    style: AppTypography.labelSmall.copyWith(
-                      color: AppColors.textMuted,
+                ],
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.spaceSM,
+                        vertical: AppSpacing.spaceXS,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? AppColors.darkSurfaceVariant
+                            : AppColors.lightSurfaceVariant,
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.radiusFull,
+                        ),
+                        border: Border.all(
+                          color: isDark
+                              ? AppColors.darkOutline
+                              : AppColors.lightOutline,
+                        ),
+                      ),
+                      child: Text(
+                        '${ayah.surahId}:${ayah.ayahId}',
+                        style: AppTypography.labelSmall.copyWith(
+                          color: AppColors.textMuted,
+                        ),
+                      ),
                     ),
-                  ),
+                    const Spacer(),
+                    _CardAction(
+                      tooltip: 'Play Surah',
+                      icon: Icons.play_arrow,
+                      onTap: onPlaySurah,
+                    ),
+                    _CardAction(
+                      tooltip: loopEnabled ? 'Stop repeat' : 'Repeat surah',
+                      icon: Icons.repeat,
+                      active: loopEnabled,
+                      onTap: onToggleRepeat,
+                    ),
+                    _CardAction(
+                      tooltip: 'Copy ayah',
+                      icon: Icons.share_outlined,
+                      onTap: onShare,
+                    ),
+                    InkWell(
+                      onTap: onBookmarkToggle,
+                      borderRadius: BorderRadius.circular(
+                        AppSpacing.radiusFull,
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppSpacing.spaceXS),
+                        child: DeenAnimatedIcon(
+                          effect: DeenSymbolEffect.bounce,
+                          replayKey: isBookmarked,
+                          child: Icon(
+                            isBookmarked
+                                ? Icons.bookmark
+                                : Icons.bookmark_border,
+                            size: AppSpacing.iconSM,
+                            color: isBookmarked
+                                ? AppColors.gold
+                                : AppColors.textMuted,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                const Spacer(),
-                InkWell(
-                  onTap: onBookmarkToggle,
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppSpacing.spaceXS),
-                    child: Icon(
-                      isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-                      size: AppSpacing.iconSM,
-                      color: isBookmarked
-                          ? AppColors.gold
-                          : AppColors.textMuted,
+                const SizedBox(height: AppSpacing.spaceSM),
+                // Arabic - RTL, Tajawal via app_typography
+                Directionality(
+                  textDirection: TextDirection.rtl,
+                  child: Text(
+                    ayah.arabic,
+                    style: AppTypography.arabicStyle(
+                      fontSize: 24,
+                      height: 1.8,
+                      color: isDark
+                          ? AppColors.darkOnSurface
+                          : AppColors.textDark,
+                      fontWeight: FontWeight.w500,
                     ),
+                    textAlign: TextAlign.right,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: AppSpacing.spaceSM),
-            // Arabic - RTL, Tajawal via app_typography
-            Directionality(
-              textDirection: TextDirection.rtl,
-              child: Text(
-                ayah.arabic,
-                style: AppTypography.arabicStyle(
-                  fontSize: 22,
-                  height: 1.8,
-                  color: isDark ? AppColors.darkOnSurface : AppColors.textDark,
-                  fontWeight: FontWeight.w500,
-                ),
-                textAlign: TextAlign.right,
-              ),
+          ),
+          // Translation sits below the card, outside the Arabic surface.
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.spaceMD,
+              AppSpacing.spaceSM,
+              AppSpacing.spaceMD,
+              AppSpacing.spaceMD,
             ),
-            const SizedBox(height: AppSpacing.spaceSM),
-            Text(
+            child: Text(
               ayah.english,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: isDark ? const Color(0xFFC2B8A8) : AppColors.textMuted,
                 height: 1.5,
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CardAction extends StatelessWidget {
+  const _CardAction({
+    required this.tooltip,
+    required this.icon,
+    required this.onTap,
+    this.active = false,
+  });
+
+  final String tooltip;
+  final IconData icon;
+  final VoidCallback onTap;
+  final bool active;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.spaceXS),
+        child: Icon(
+          icon,
+          size: AppSpacing.iconSM,
+          color: active ? AppColors.gold : AppColors.textMuted,
+          semanticLabel: tooltip,
+        ),
+      ),
+    );
+  }
+}
+
+/// Surah selector: numeric card opening a 1-114 picker with per-surah
+/// ayah counts computed at runtime from verified data (no metadata file).
+class _SurahSelectorRow extends StatelessWidget {
+  const _SurahSelectorRow({
+    required this.ayahs,
+    required this.current,
+    required this.onSelect,
+  });
+
+  final List<QuranAyah> ayahs;
+  final QuranAyah? current;
+  final Future<void> Function(List<QuranAyah>, int) onSelect;
+
+  Map<int, int> _counts() {
+    final counts = <int, int>{};
+    for (final a in ayahs) {
+      counts[a.surahId] = (counts[a.surahId] ?? 0) + 1;
+    }
+    return counts;
+  }
+
+  Future<void> _openPicker(BuildContext context) async {
+    final counts = _counts();
+    final ids = counts.keys.toList()..sort();
+    final picked = await showModalBottomSheet<int>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: ListView.builder(
+          itemCount: ids.length,
+          itemBuilder: (_, i) => ListTile(
+            title: Text('Surah ${ids[i]}'),
+            trailing: Text(
+              '${counts[ids[i]]} ayahs',
+              style: AppTypography.labelSmall.copyWith(
+                color: AppColors.textMuted,
+              ),
+            ),
+            onTap: () => Navigator.of(ctx).pop(ids[i]),
+          ),
+        ),
+      ),
+    );
+    if (picked != null && context.mounted) {
+      await onSelect(ayahs, picked);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.spaceMD,
+        AppSpacing.spaceSM,
+        AppSpacing.spaceMD,
+        AppSpacing.spaceXS,
+      ),
+      child: Semantics(
+        button: true,
+        label: 'Select surah',
+        value: current == null ? 'none' : 'Surah ${current!.surahId}',
+        child: InkWell(
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMD),
+          onTap: () => _openPicker(context),
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.spaceMD,
+              vertical: AppSpacing.spaceSM,
+            ),
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.darkSurface : Colors.white,
+              borderRadius: BorderRadius.circular(AppSpacing.radiusMD),
+              border: Border.all(
+                color: isDark
+                    ? AppColors.darkOutlineVariant
+                    : AppColors.lightOutlineVariant,
+              ),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.menu_book_outlined,
+                  size: 20,
+                  color: AppColors.goldDark,
+                ),
+                const SizedBox(width: AppSpacing.spaceSM),
+                Expanded(
+                  child: Text(
+                    current == null
+                        ? 'Select surah'
+                        : 'Surah ${current!.surahId}',
+                    style: AppTypography.titleMedium.copyWith(
+                      color: isDark
+                          ? AppColors.darkOnSurface
+                          : AppColors.textDark,
+                    ),
+                  ),
+                ),
+                const Icon(Icons.expand_more, color: AppColors.textMuted),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Thin position progress: "ayah X of Y" plus percent (sacred, static).
+class _ReaderProgressBar extends StatelessWidget {
+  const _ReaderProgressBar({required this.ayahs, required this.current});
+
+  final List<QuranAyah> ayahs;
+  final QuranAyah? current;
+
+  @override
+  Widget build(BuildContext context) {
+    final idx = current == null
+        ? 0
+        : ayahs.indexWhere(
+            (a) => a.surahId == current!.surahId && a.ayahId == current!.ayahId,
+          );
+    final pos = idx < 0 ? 0 : idx + 1;
+    final total = ayahs.length;
+    final progress = total == 0 ? 0.0 : (pos / total).clamp(0.0, 1.0);
+    final percent = (progress * 100).round();
+    return Semantics(
+      label: 'Reading position',
+      value: 'ayah $pos of $total, $percent percent',
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.spaceMD,
+          vertical: AppSpacing.spaceXS,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(
+                  'ayah $pos of $total',
+                  style: AppTypography.labelSmall.copyWith(
+                    color: AppColors.textMuted,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  '$percent%',
+                  style: AppTypography.labelSmall.copyWith(
+                    color: AppColors.textMuted,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+              child: LinearProgressIndicator(
+                value: progress,
+                minHeight: 4,
+                backgroundColor: AppColors.textMuted.withValues(alpha: 0.2),
+                valueColor: const AlwaysStoppedAnimation<Color>(AppColors.gold),
+              ),
+            ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Bottom action bar: Previous, I'm Done, Next with hasanat preview.
+/// The preview equals the commit base rate: AppConstants.hasanatPerAyah.
+/// Spark appears on the bar after commit, never over ayah text.
+class _ReaderActionBar extends StatelessWidget {
+  const _ReaderActionBar({
+    required this.onPrevious,
+    required this.onNext,
+    required this.onDone,
+    required this.committing,
+    required this.justCommitted,
+  });
+
+  final Future<void> Function() onPrevious;
+  final Future<void> Function() onNext;
+  final Future<void> Function() onDone;
+  final bool committing;
+  final bool justCommitted;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.spaceMD,
+        AppSpacing.spaceSM,
+        AppSpacing.spaceMD,
+        100,
+      ),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.mushafNight : AppColors.parchment,
+        border: Border(
+          top: BorderSide(
+            color: isDark
+                ? AppColors.darkOutlineVariant
+                : AppColors.lightOutlineVariant,
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Semantics(
+              button: true,
+              label: 'Previous surah',
+              child: OutlinedButton(
+                onPressed: () => onPrevious(),
+                child: const Text('Previous'),
+              ),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.spaceSM),
+          Expanded(
+            flex: 2,
+            child: Semantics(
+              button: true,
+              label: "I'm done, save reading session",
+              child: ElevatedButton.icon(
+                onPressed: committing ? null : () => onDone(),
+                icon: justCommitted
+                    ? const Icon(Icons.auto_awesome, size: 18)
+                    : const Icon(Icons.check, size: 18),
+                label: Text(committing ? 'Saving…' : "I'm Done"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.gold,
+                  foregroundColor: AppColors.textDark,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.spaceSM),
+          Expanded(
+            child: Semantics(
+              button: true,
+              label:
+                  'Next surah, plus ${AppConstants.hasanatPerAyah} hasanat per ayah',
+              child: OutlinedButton(
+                onPressed: () => onNext(),
+                child: Text('Next +${AppConstants.hasanatPerAyah}'),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
