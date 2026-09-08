@@ -1,5 +1,7 @@
+import 'dart:math' as math;
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -8,13 +10,15 @@ import '../../../core/theme/app_gradients.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/utils/deen_icons.dart';
 import '../../providers/display_providers.dart';
-import 'deen_glass.dart';
-import 'deen_gradient_icon.dart';
+import '../icons/deen_symbol_effects.dart';
 import 'glass_metrics.dart';
 
-/// Floating Liquid Glass bottom navigation.
-/// Margin 16, radius 28, blur, gradient border, internal glow on tap.
-/// Selected icon rendered with gradient via ShaderMask srcIn.
+/// Liquid glass bottom navigation (Design v5).
+///
+/// Ultra-transparent base (3% tint, theme-aware), single BackdropFilter
+/// wrapped in RepaintBoundary, specular 1px top line, diffuse gold
+/// indicator under the selected item. All transitions quintic.
+/// Glass stays on the navigation layer only.
 class DeenGlassNavBar extends ConsumerWidget {
   const DeenGlassNavBar({
     super.key,
@@ -34,28 +38,58 @@ class DeenGlassNavBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final themeMode = ref.watch(themeModeProvider).valueOrNull;
+    final isDark = themeMode != null
+        ? themeMode == ThemeMode.dark
+        : Theme.of(context).brightness == Brightness.dark;
     final elderly = ref.watch(elderlyModeProvider).valueOrNull ?? false;
-    final blurSigma = GlassMetrics.effectiveSigma(18, elderly);
+    final blurSigma = GlassMetrics.effectiveSigma(16, elderly);
+    final bottomPad = math.max(
+      AppSpacing.navFloatingMargin,
+      MediaQuery.viewPaddingOf(context).bottom,
+    );
 
-    return SafeArea(
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(
-          AppSpacing.navFloatingMargin,
-          0,
-          AppSpacing.navFloatingMargin,
-          AppSpacing.navFloatingMargin,
-        ),
-        child: RepaintBoundary(
-          child: DeenGlass(
-            variant: DeenGlassVariant.regular,
-            borderRadius: AppSpacing.navRadius,
-            blurSigma: blurSigma,
+    // 3% theme-aware base tint; sheen + specular + shadow carry definition.
+    final glassBase = isDark
+        ? Colors.black.withValues(alpha: 0.03)
+        : Colors.white.withValues(alpha: 0.03);
+
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.navFloatingMargin,
+        0,
+        AppSpacing.navFloatingMargin,
+        bottomPad,
+      ),
+      child: RepaintBoundary(
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(AppSpacing.navRadius),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma),
             child: Container(
               height: AppSpacing.navHeight,
               padding: const EdgeInsets.symmetric(
                 horizontal: AppSpacing.spaceSM,
                 vertical: 4,
+              ),
+              decoration: BoxDecoration(
+                color: glassBase,
+                borderRadius: BorderRadius.circular(AppSpacing.navRadius),
+                border: Border(
+                  top: BorderSide(
+                    color: Colors.white.withValues(alpha: 0.22),
+                    width: 1,
+                  ),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: isDark
+                        ? AppColors.shadowDark
+                        : AppColors.shadowLight,
+                    blurRadius: AppSpacing.elevationLG,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -63,10 +97,14 @@ class DeenGlassNavBar extends ConsumerWidget {
                   final isSelected = i == currentIndex;
                   final item = _items[i];
                   final iconWidget = isSelected
-                      ? DeenGradientIcon(
+                      ? DeenAnimatedIcon(
+                          key: ValueKey('nav-icon-$i'),
                           asset: item.icon,
                           size: 20,
                           gradient: AppGradients.goldFlow,
+                          effect: DeenSymbolEffect.bounce,
+                          replayKey: currentIndex,
+                          semanticLabel: '${item.label} tab, selected',
                         )
                       : SvgPicture.asset(
                           item.icon,
@@ -80,65 +118,84 @@ class DeenGlassNavBar extends ConsumerWidget {
                           ),
                         );
 
-                  Widget button = InkWell(
-                    onTap: () => onTap(i),
-                    borderRadius: BorderRadius.circular(18),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? (isDark
-                                  ? AppColors.gold.withValues(alpha: 0.16)
-                                  : AppColors.gold.withValues(alpha: 0.14))
-                            : Colors.transparent,
+                  return Expanded(
+                    child: Center(
+                      child: InkWell(
+                        onTap: () => onTap(i),
                         borderRadius: BorderRadius.circular(18),
-                        border: isSelected
-                            ? Border.all(
-                                color: AppColors.gold.withValues(alpha: 0.22),
-                                width: 0.8,
-                              )
-                            : null,
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          iconWidget,
-                          const SizedBox(height: 1),
-                          Text(
-                            item.label,
-                            style: TextStyle(
-                              fontSize: 9,
-                              fontWeight: isSelected
-                                  ? FontWeight.w700
-                                  : FontWeight.w500,
-                              color: isSelected
-                                  ? (isDark
-                                        ? AppColors.darkOnSurface
-                                        : AppColors.textDark)
-                                  : (isDark
-                                        ? const Color(0xFF9E9589)
-                                        : AppColors.textMuted),
-                              letterSpacing: 0.3,
-                            ),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeInOutQuint,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 3,
                           ),
-                        ],
+                          decoration: BoxDecoration(
+                            // Diffuse gold wash (goldFlow stops at 0.18).
+                            gradient: isSelected
+                                ? LinearGradient(
+                                    colors: [
+                                      AppColors.gold.withValues(alpha: 0.18),
+                                      AppColors.earthBrown.withValues(
+                                        alpha: 0.18,
+                                      ),
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  )
+                                : null,
+                            color: isSelected ? null : Colors.transparent,
+                            borderRadius: BorderRadius.circular(18),
+                            border: isSelected
+                                ? Border.all(
+                                    color: AppColors.gold.withValues(
+                                      alpha: 0.22,
+                                    ),
+                                    width: 0.8,
+                                  )
+                                : null,
+                            boxShadow: isSelected
+                                ? [
+                                    BoxShadow(
+                                      color: AppColors.gold.withValues(
+                                        alpha: 0.28,
+                                      ),
+                                      blurRadius: 12,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ]
+                                : null,
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              iconWidget,
+                              const SizedBox(height: 1),
+                              AnimatedDefaultTextStyle(
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeInOutQuint,
+                                style: TextStyle(
+                                  fontSize: 9,
+                                  fontWeight: isSelected
+                                      ? FontWeight.w700
+                                      : FontWeight.w500,
+                                  color: isSelected
+                                      ? (isDark
+                                            ? AppColors.darkOnSurface
+                                            : AppColors.textDark)
+                                      : (isDark
+                                            ? const Color(0xFF9E9589)
+                                            : AppColors.textMuted),
+                                  letterSpacing: 0.3,
+                                ),
+                                child: Text(item.label),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
                   );
-
-                  if (isSelected && !elderly) {
-                    button = button
-                        .animate(key: ValueKey('nav-$i'))
-                        .shimmer(
-                          duration: 420.ms,
-                          color: AppColors.gold.withValues(alpha: 0.28),
-                        );
-                  }
-
-                  return Expanded(child: Center(child: button));
                 }),
               ),
             ),

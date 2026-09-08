@@ -6,6 +6,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/deen_icons.dart';
+import '../../../core/utils/screen_insets.dart';
 import '../../../shared/widgets/glass/deen_glass_app_bar.dart';
 import '../../../shared/widgets/glass/deen_scroll_edge_fade.dart';
 import '../providers/prayer_providers.dart';
@@ -35,7 +36,7 @@ class PrayerTimesScreen extends ConsumerWidget {
       appBar: const DeenGlassAppBar(title: 'Prayer Times'),
       body: CustomScrollView(
         slivers: [
-          const SliverToBoxAdapter(child: SizedBox(height: kToolbarHeight)),
+          SliverToBoxAdapter(child: SizedBox(height: topContentPad(context))),
           const SliverToBoxAdapter(child: DeenScrollEdgeFade(isTop: true)),
           SliverPadding(
             padding: const EdgeInsets.all(AppSpacing.spaceMD),

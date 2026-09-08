@@ -147,4 +147,40 @@ void main() {
       expect(await container.read(ayahOfDayProvider.future), isNull);
     });
   });
+
+  group('Recent surahs (IDs only, max 3, most-recent-first)', () {
+    test('push dedups, orders, and trims', () async {
+      final db = DeenDatabase.forTesting(NativeDatabase.memory());
+      final container = ProviderContainer(
+        overrides: [deenDatabaseProvider.overrideWithValue(db)],
+      );
+      addTearDown(() async {
+        container.dispose();
+        await db.close();
+      });
+
+      final push = container.read(pushRecentSurahProvider);
+      await push(2);
+      await push(36);
+      await push(2);
+      await push(67);
+      await push(114);
+
+      final recents = await container.read(recentSurahsProvider.future);
+      expect(recents, [114, 67, 2]);
+    });
+
+    test('empty when nothing read yet', () async {
+      final db = DeenDatabase.forTesting(NativeDatabase.memory());
+      final container = ProviderContainer(
+        overrides: [deenDatabaseProvider.overrideWithValue(db)],
+      );
+      addTearDown(() async {
+        container.dispose();
+        await db.close();
+      });
+
+      expect(await container.read(recentSurahsProvider.future), isEmpty);
+    });
+  });
 }

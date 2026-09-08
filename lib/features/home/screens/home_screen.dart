@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_canvas.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
-import '../../../core/theme/app_typography.dart';
+import '../../../core/utils/screen_insets.dart';
 import '../../../shared/widgets/glass/deen_glass_app_bar.dart';
 import '../../../shared/widgets/glass/deen_scroll_edge_fade.dart';
 import '../../../shared/widgets/pattern_overlay.dart';
@@ -84,13 +84,6 @@ final homeDashboardProvider = FutureProvider<HomeDashboardData>((ref) async {
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
-  String _greeting(DateTime now) {
-    final h = now.hour;
-    if (h < 12) return 'Good morning';
-    if (h < 18) return 'Good afternoon';
-    return 'Good evening';
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -108,6 +101,38 @@ class HomeScreen extends ConsumerWidget {
     final targetAyahs = homeData?.targetAyahs ?? 5;
     final todayAyahs = today?.ayahsRead ?? 0;
     final last = lastReadAsync.valueOrNull;
+    final dateLine = hijriGregorianLabel(now);
+
+    Widget header(String? name) {
+      final trimmed = (name ?? '').trim();
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(AppSpacing.spaceMD),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              AppColors.gold.withValues(alpha: isDark ? 0.22 : 0.28),
+              AppColors.gold.withValues(alpha: 0.0),
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+          borderRadius: BorderRadius.circular(AppSpacing.radiusXL),
+        ),
+        child: HomeHeader(
+          key: const ValueKey('home-header'),
+          userName: trimmed.isEmpty ? null : trimmed,
+          greeting: trimmed.isEmpty
+              ? 'As-salamu alaykum'
+              : 'As-salamu alaykum, $trimmed',
+          greeting2: dateLine,
+          streakCount: streak,
+          todayCount: todayAyahs,
+          targetCount: targetAyahs,
+          goalUnit: 'ayahs',
+        ),
+      );
+    }
 
     return Scaffold(
       extendBody: true,
@@ -126,7 +151,9 @@ class HomeScreen extends ConsumerWidget {
           const Positioned.fill(child: DeenPatternOverlay()),
           CustomScrollView(
             slivers: [
-              const SliverToBoxAdapter(child: SizedBox(height: kToolbarHeight)),
+              SliverToBoxAdapter(
+                child: SizedBox(height: topContentPad(context)),
+              ),
               const SliverToBoxAdapter(child: DeenScrollEdgeFade(isTop: true)),
               SliverPadding(
                 padding: const EdgeInsets.fromLTRB(
@@ -137,39 +164,13 @@ class HomeScreen extends ConsumerWidget {
                 ),
                 sliver: SliverList.list(
                   children: [
-                    // 1. Header: avatar, greeting, streak chip, goal badge, gear.
+                    // 1. Gradient header band: salam, Hijri date, chips, gear.
                     greetingAsync.when(
-                      data: (name) => HomeHeader(
-                        userName: name,
-                        greeting: _greeting(now),
-                        greeting2: (name != null && name.trim().isNotEmpty)
-                            ? 'Peace be upon you, ${name.trim()}'
-                            : 'Peace be upon you',
-                        streakCount: streak,
-                        todayCount: todayAyahs,
-                        targetCount: targetAyahs,
-                        goalUnit: 'ayahs',
-                      ),
-                      loading: () => HomeHeader(
-                        userName: null,
-                        greeting: _greeting(now),
-                        greeting2: 'Peace be upon you',
-                        streakCount: streak,
-                        todayCount: todayAyahs,
-                        targetCount: targetAyahs,
-                        goalUnit: 'ayahs',
-                      ),
-                      error: (_, _) => HomeHeader(
-                        userName: null,
-                        greeting: 'Peace be upon you',
-                        greeting2: '',
-                        streakCount: streak,
-                        todayCount: todayAyahs,
-                        targetCount: targetAyahs,
-                        goalUnit: 'ayahs',
-                      ),
+                      data: (name) => header(name),
+                      loading: () => header(null),
+                      error: (_, _) => header(null),
                     ),
-                    const SizedBox(height: AppSpacing.spaceLG),
+                    const SizedBox(height: AppSpacing.spaceMD),
                     // 2. Week pills restyled on canvas.
                     WeeklyStreakTracker(
                       key: const ValueKey('week-pills'),
@@ -179,7 +180,7 @@ class HomeScreen extends ConsumerWidget {
                       todayWeekday: now.weekday,
                       transparent: true,
                     ),
-                    const SizedBox(height: AppSpacing.spaceLG),
+                    const SizedBox(height: AppSpacing.spaceMD),
                     // 3. Goal hero with last-read + Continue.
                     GoalHeroCard(
                       key: const ValueKey('goal-hero'),
@@ -188,38 +189,29 @@ class HomeScreen extends ConsumerWidget {
                       lastSurahId: last?.surahId,
                       lastAyahId: last?.ayahId,
                     ),
-                    const SizedBox(height: AppSpacing.spaceLG),
+                    const SizedBox(height: AppSpacing.spaceMD),
                     // 4. Quick surah chips.
                     const SurahChips(key: ValueKey('surah-chips')),
-                    const SizedBox(height: AppSpacing.spaceLG),
+                    const SizedBox(height: AppSpacing.spaceMD),
                     // 5. Ayah of the Day (verbatim verified data).
                     const AyahOfDayCard(key: ValueKey('ayah-of-day')),
-                    const SizedBox(height: AppSpacing.spaceLG),
+                    const SizedBox(height: AppSpacing.spaceMD),
                     // 6. Daily challenge dark card.
                     DailyChallengeCard(
                       key: const ValueKey('challenge-card'),
                       targetAyahs: targetAyahs,
                       todayAyahs: todayAyahs,
                     ),
-                    const SizedBox(height: AppSpacing.spaceLG),
+                    const SizedBox(height: AppSpacing.spaceMD),
                     // 7. Stats row with Today/Week/All tabs.
                     const StatsRow(key: ValueKey('stats-row')),
-                    const SizedBox(height: AppSpacing.spaceLG),
+                    const SizedBox(height: AppSpacing.spaceMD),
                     // 8. Family circles card.
                     const FamilyCirclesHomeCard(key: ValueKey('family-card')),
-                    const SizedBox(height: AppSpacing.spaceLG),
+                    const SizedBox(height: AppSpacing.spaceMD),
                     // 9. Next prayer strip.
                     const NextPrayerStrip(key: ValueKey('prayer-strip')),
                     const SizedBox(height: AppSpacing.spaceSM),
-                    // Encouragement microcopy (DEEN 3).
-                    Text(
-                      'Counts are encouragement only; true reward is with Allah.',
-                      style: AppTypography.labelSmall.copyWith(
-                        color: AppColors.textMuted,
-                        fontStyle: FontStyle.italic,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
                   ],
                 ),
               ),

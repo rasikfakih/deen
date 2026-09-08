@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/utils/screen_insets.dart';
 import '../../../core/utils/app_constants.dart';
 import '../../../shared/widgets/glass/deen_glass_app_bar.dart';
 
@@ -27,10 +28,10 @@ class SupportScreen extends StatelessWidget {
           : AppColors.lightBackground,
       appBar: const DeenGlassAppBar(title: 'Support Deen'),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(
-          AppSpacing.spaceLG,
-          kToolbarHeight + AppSpacing.spaceLG,
-          AppSpacing.spaceLG,
+        padding: EdgeInsets.fromLTRB(
+          AppSpacing.spaceMD,
+          topContentPad(context),
+          AppSpacing.spaceMD,
           100,
         ),
         children: [

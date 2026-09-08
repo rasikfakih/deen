@@ -86,12 +86,16 @@ class WeeklyStreakTracker extends ConsumerWidget {
               color: AppColors.goldDark,
             ),
             const SizedBox(width: AppSpacing.spaceXS),
-            Text(
-              currentStreak > 0
-                  ? '$currentStreak day streak'
-                  : 'Start your streak today',
-              style: AppTypography.titleMedium.copyWith(
-                color: isDark ? AppColors.darkOnSurface : AppColors.textDark,
+            Flexible(
+              child: Text(
+                currentStreak > 0
+                    ? '$currentStreak day streak'
+                    : 'Start your streak today',
+                style: AppTypography.titleMedium.copyWith(
+                  color: isDark ? AppColors.darkOnSurface : AppColors.textDark,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
             const Spacer(),
@@ -100,6 +104,7 @@ class WeeklyStreakTracker extends ConsumerWidget {
               style: AppTypography.labelSmall.copyWith(
                 color: AppColors.textMuted,
               ),
+              maxLines: 1,
             ),
           ],
         ),
@@ -162,18 +167,20 @@ class WeeklyStreakTracker extends ConsumerWidget {
                   );
             }
 
-            return Column(
-              children: [
-                pill,
-                const SizedBox(height: 4),
-                Text(
-                  _labels[i],
-                  style: AppTypography.labelSmall.copyWith(
-                    color: isToday ? AppColors.goldDark : AppColors.textMuted,
-                    fontWeight: isToday ? FontWeight.w700 : FontWeight.w400,
+            return Expanded(
+              child: Column(
+                children: [
+                  pill,
+                  const SizedBox(height: 4),
+                  Text(
+                    _labels[i],
+                    style: AppTypography.labelSmall.copyWith(
+                      color: isToday ? AppColors.goldDark : AppColors.textMuted,
+                      fontWeight: isToday ? FontWeight.w700 : FontWeight.w400,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             );
           }),
         ),

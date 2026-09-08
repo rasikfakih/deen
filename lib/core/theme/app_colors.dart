@@ -73,12 +73,12 @@ abstract final class AppColors {
   static const Color shadowLight = Color(0x1F1F1F1F);
   static const Color shadowDark = Color(0x66000000);
 
-  // Glass tokens - translucency only for navigation layer per DEEN Section 8.1.
-  // Content cards stay opaque (white / darkSurface). Glass is nav bars only.
-  // Light tint is warm #FFF8EE (CTO device-QA ruling, DEEN 8.2).
-  static Color get glassLight =>
-      const Color(0xFFFFF8EE).withValues(alpha: 0.62);
-  static Color get glassDark => const Color(0xFF1E1B16).withValues(alpha: 0.55);
+  // Glass tokens - translucency only for navigation layer per DEEN 8.1/8.2.
+  // v5: ultra-transparent 3% theme-aware base. Definition comes from the
+  // 0.8 sheen border, the 0.22 specular top line, and the shadow.
+  // Content cards stay opaque. Glass is nav bars only.
+  static Color get glassLight => Colors.white.withValues(alpha: 0.03);
+  static Color get glassDark => Colors.black.withValues(alpha: 0.03);
   static Color get glassBorderLight => Colors.white.withValues(alpha: 0.18);
   static Color get glassBorderDark => Colors.white.withValues(alpha: 0.12);
   static const Color glassShadowLight = shadowLight;

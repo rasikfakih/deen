@@ -46,6 +46,15 @@ abstract final class AppTypography {
     height: 1.3,
   );
 
+  // Display numerals - bold, tight counters and stats (Design v5).
+  // Number-only content; scales with the existing text scaler.
+  static TextStyle displayNumerals = _poppins(
+    fontSize: 36,
+    fontWeight: FontWeight.w800,
+    height: 1.1,
+    letterSpacing: -0.5,
+  );
+
   // Headline - section headers.
   static TextStyle headlineLarge = _poppins(
     fontSize: 22,

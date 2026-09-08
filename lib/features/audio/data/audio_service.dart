@@ -89,6 +89,12 @@ class AudioService {
     await _player.setSpeed(speed);
   }
 
+  /// Loops the current source (surah repeat for the reader). No new
+  /// dependency: just_audio LoopMode.
+  Future<void> setLoopOne() => _player.setLoopMode(LoopMode.one);
+
+  Future<void> setLoopOff() => _player.setLoopMode(LoopMode.off);
+
   Future<void> stop() async {
     await _player.stop();
   }

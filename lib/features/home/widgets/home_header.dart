@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/utils/deen_icons.dart';
+import '../../../shared/widgets/icons/deen_symbol_effects.dart';
 
 /// Design v3 Home header: avatar initial, greeting + name, streak flame
 /// chip, goal badge (today/target), settings gear. Static paint, no glow.
@@ -94,10 +96,13 @@ class HomeHeader extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(
-                    Icons.local_fire_department,
+                  DeenAnimatedIcon(
+                    asset: DeenIcons.ic_streak,
                     size: 14,
                     color: AppColors.goldDark,
+                    effect: streakCount > 0
+                        ? DeenSymbolEffect.pulse
+                        : DeenSymbolEffect.none,
                   ),
                   const SizedBox(width: 2),
                   Text(

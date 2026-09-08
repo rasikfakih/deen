@@ -62,7 +62,10 @@ class DeenApp extends ConsumerWidget {
 
     final themeMode = themeModeAsync.valueOrNull ?? ThemeMode.system;
     final isElderly = elderlyAsync.valueOrNull ?? false;
-    final textScale = isElderly ? 1.2 : 1.0;
+    // Temporary clamp: device text scaler capped at 1.3 until the overflow
+    // matrix passes at 1.5 (see DEEN follow-ups). Elderly 1.2 unaffected.
+    final deviceScale = MediaQuery.textScalerOf(context).scale(1.0);
+    final textScale = (isElderly ? 1.2 : deviceScale).clamp(1.0, 1.3);
 
     return MaterialApp.router(
       title: 'Deen',

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:deen/features/settings/providers/settings_providers.dart';
+import 'package:deen/core/theme/app_colors.dart';
 import 'package:deen/shared/database/deen_database.dart';
 import 'package:deen/shared/widgets/glass/deen_glass.dart';
 import 'package:deen/shared/widgets/glass/deen_glass_nav_bar.dart';
@@ -24,6 +25,9 @@ void main() {
       overrides: [
         deenDatabaseProvider.overrideWithValue(testDb),
         elderlyModeProvider.overrideWith((ref) => Stream.value(elderly)),
+        // The nav bar watches themeModeProvider (real drift stream). Override
+        // it like elderly so disposal never leaves a pending drift timer.
+        themeModeProvider.overrideWith((ref) => Stream.value(ThemeMode.light)),
         // Ensure initialData available via valueOrNull checks; StreamProvider handles.
       ],
       child: MaterialApp(home: Scaffold(body: child)),
@@ -41,6 +45,10 @@ void main() {
       ),
       findsOneWidget,
     );
+    // Flush ProviderScope disposal (drift stream-close timer) inside this
+    // test so it cannot trip the next test's pump invariants.
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(milliseconds: 50));
   });
 
   testWidgets(
@@ -71,6 +79,9 @@ void main() {
         overrides: [
           deenDatabaseProvider.overrideWithValue(testDb),
           elderlyModeProvider.overrideWith((ref) => Stream.value(true)),
+          themeModeProvider.overrideWith(
+            (ref) => Stream.value(ThemeMode.light),
+          ),
         ],
         child: MaterialApp(
           home: Scaffold(
@@ -122,5 +133,56 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
     expect(find.byType(RepaintBoundary), findsWidgets);
+  });
+
+  testWidgets('Nav bar keeps visible definition on light canvas at 0.03 tint', (
+    tester,
+  ) async {
+    // CTO guard: at 3% the tint nearly vanishes, so the 0.8 sheen
+    // border, the 0.22 specular top line, and the shadow must carry
+    // the bar. Structural assertion, no pixel sampling.
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          deenDatabaseProvider.overrideWithValue(testDb),
+          elderlyModeProvider.overrideWith((ref) => Stream.value(true)),
+          themeModeProvider.overrideWith(
+            (ref) => Stream.value(ThemeMode.light),
+          ),
+        ],
+        child: MaterialApp(
+          home: Scaffold(
+            backgroundColor: AppColors.cream,
+            body: const Text('canvas'),
+            bottomNavigationBar: DeenGlassNavBar(
+              currentIndex: 0,
+              onTap: (_) {},
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    bool matchesTint(Widget w) {
+      if (w is! Container) return false;
+      final d = w.decoration;
+      if (d is! BoxDecoration) return false;
+      return d.color == Colors.white.withValues(alpha: 0.03);
+    }
+
+    bool matchesSpecular(Widget w) {
+      if (w is! Container) return false;
+      final d = w.decoration;
+      if (d is! BoxDecoration) return false;
+      final border = d.border;
+      if (border is! Border) return false;
+      return border.top.color == Colors.white.withValues(alpha: 0.22) &&
+          border.top.width == 1;
+    }
+
+    expect(find.byWidgetPredicate(matchesTint), findsOneWidget);
+    expect(find.byWidgetPredicate(matchesSpecular), findsOneWidget);
   });
 }

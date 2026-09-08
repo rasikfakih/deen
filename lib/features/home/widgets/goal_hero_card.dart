@@ -5,6 +5,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../shared/widgets/deen_card.dart';
+import '../../../shared/widgets/icons/deen_symbol_effects.dart';
 
 /// Design v3 goal hero: gold gradient card with progress bar, ayah count +
 /// percent labels, numeric last-read line, Continue Reading CTA.
@@ -51,11 +52,16 @@ class GoalHeroCard extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
-                Text(
-                  '$current / $target ayahs',
-                  style: AppTypography.labelMedium.copyWith(
-                    color: onGold,
-                    fontWeight: FontWeight.w700,
+                Flexible(
+                  child: Text(
+                    '$current / $target ayahs',
+                    style: AppTypography.labelMedium.copyWith(
+                      color: onGold,
+                      fontWeight: FontWeight.w700,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.end,
                   ),
                 ),
                 const SizedBox(width: AppSpacing.spaceXS),
@@ -71,13 +77,21 @@ class GoalHeroCard extends StatelessWidget {
             const SizedBox(height: AppSpacing.spaceSM),
             Semantics(
               excludeSemantics: true,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-                child: LinearProgressIndicator(
-                  value: progress,
-                  minHeight: 10,
-                  backgroundColor: AppColors.earthBrown.withValues(alpha: 0.25),
-                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+              child: DeenAnimatedIcon(
+                effect: DeenSymbolEffect.drawOn,
+                replayKey: 'goal-bar',
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+                  child: LinearProgressIndicator(
+                    value: progress,
+                    minHeight: 10,
+                    backgroundColor: AppColors.earthBrown.withValues(
+                      alpha: 0.25,
+                    ),
+                    valueColor: const AlwaysStoppedAnimation<Color>(
+                      Colors.white,
+                    ),
+                  ),
                 ),
               ),
             ),
