@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_canvas.dart';
-import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/utils/screen_insets.dart';
-import '../../../shared/widgets/glass/deen_glass_app_bar.dart';
-import '../../../shared/widgets/glass/deen_scroll_edge_fade.dart';
+import '../../../shared/widgets/chrome/deen_app_bar.dart';
+import '../../../shared/widgets/chrome/deen_chrome.dart';
+import '../../../shared/widgets/chrome/deen_scroll_edge_fade.dart';
 import '../../../shared/widgets/pattern_overlay.dart';
 import '../../gamification/providers/gamification_providers.dart';
 import '../../prayer/providers/prayer_providers.dart';
@@ -105,26 +105,26 @@ class HomeScreen extends ConsumerWidget {
 
     Widget header(String? name) {
       final trimmed = (name ?? '').trim();
+      // Full-bleed night band (DEEN 8.2 v6): no radius, edge to edge.
       return Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(AppSpacing.spaceMD),
-        decoration: BoxDecoration(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.spaceMD,
+          AppSpacing.spaceMD,
+          AppSpacing.spaceMD,
+          AppSpacing.spaceLG,
+        ),
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [
-              AppColors.gold.withValues(alpha: isDark ? 0.22 : 0.28),
-              AppColors.gold.withValues(alpha: 0.0),
-            ],
+            colors: [Color(0xFF191410), Color(0xFF2A2018)],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
-          borderRadius: BorderRadius.circular(AppSpacing.radiusXL),
         ),
         child: HomeHeader(
           key: const ValueKey('home-header'),
           userName: trimmed.isEmpty ? null : trimmed,
-          greeting: trimmed.isEmpty
-              ? 'As-salamu alaykum'
-              : 'As-salamu alaykum, $trimmed',
+          greeting: 'As-salamu alaykum',
           greeting2: dateLine,
           streakCount: streak,
           todayCount: todayAyahs,
@@ -138,7 +138,7 @@ class HomeScreen extends ConsumerWidget {
       extendBody: true,
       extendBodyBehindAppBar: true,
       backgroundColor: Colors.transparent,
-      appBar: const DeenGlassAppBar(title: 'Home'),
+      appBar: const DeenAppBar(title: 'Home'),
       body: Stack(
         children: [
           Positioned.fill(
@@ -149,75 +149,84 @@ class HomeScreen extends ConsumerWidget {
             ),
           ),
           const Positioned.fill(child: DeenPatternOverlay()),
-          CustomScrollView(
-            slivers: [
-              SliverToBoxAdapter(
-                child: SizedBox(height: topContentPad(context)),
-              ),
-              const SliverToBoxAdapter(child: DeenScrollEdgeFade(isTop: true)),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.spaceMD,
-                  AppSpacing.spaceSM,
-                  AppSpacing.spaceMD,
-                  AppSpacing.spaceMD,
+          DeenChromeListener(
+            child: CustomScrollView(
+              slivers: [
+                SliverToBoxAdapter(
+                  child: SizedBox(height: topContentPad(context)),
                 ),
-                sliver: SliverList.list(
-                  children: [
-                    // 1. Gradient header band: salam, Hijri date, chips, gear.
-                    greetingAsync.when(
-                      data: (name) => header(name),
-                      loading: () => header(null),
-                      error: (_, _) => header(null),
-                    ),
-                    const SizedBox(height: AppSpacing.spaceMD),
-                    // 2. Week pills restyled on canvas.
-                    WeeklyStreakTracker(
-                      key: const ValueKey('week-pills'),
-                      currentStreak: streak,
-                      completedByWeekday:
-                          homeData?.completedByWeekday ?? List.filled(7, false),
-                      todayWeekday: now.weekday,
-                      transparent: true,
-                    ),
-                    const SizedBox(height: AppSpacing.spaceMD),
-                    // 3. Goal hero with last-read + Continue.
-                    GoalHeroCard(
-                      key: const ValueKey('goal-hero'),
-                      current: todayAyahs,
-                      target: targetAyahs,
-                      lastSurahId: last?.surahId,
-                      lastAyahId: last?.ayahId,
-                    ),
-                    const SizedBox(height: AppSpacing.spaceMD),
-                    // 4. Quick surah chips.
-                    const SurahChips(key: ValueKey('surah-chips')),
-                    const SizedBox(height: AppSpacing.spaceMD),
-                    // 5. Ayah of the Day (verbatim verified data).
-                    const AyahOfDayCard(key: ValueKey('ayah-of-day')),
-                    const SizedBox(height: AppSpacing.spaceMD),
-                    // 6. Daily challenge dark card.
-                    DailyChallengeCard(
-                      key: const ValueKey('challenge-card'),
-                      targetAyahs: targetAyahs,
-                      todayAyahs: todayAyahs,
-                    ),
-                    const SizedBox(height: AppSpacing.spaceMD),
-                    // 7. Stats row with Today/Week/All tabs.
-                    const StatsRow(key: ValueKey('stats-row')),
-                    const SizedBox(height: AppSpacing.spaceMD),
-                    // 8. Family circles card.
-                    const FamilyCirclesHomeCard(key: ValueKey('family-card')),
-                    const SizedBox(height: AppSpacing.spaceMD),
-                    // 9. Next prayer strip.
-                    const NextPrayerStrip(key: ValueKey('prayer-strip')),
-                    const SizedBox(height: AppSpacing.spaceSM),
-                  ],
+                const SliverToBoxAdapter(
+                  child: DeenScrollEdgeFade(isTop: true),
                 ),
-              ),
-              const SliverToBoxAdapter(child: DeenScrollEdgeFade(isTop: false)),
-              const SliverToBoxAdapter(child: SizedBox(height: 100)),
-            ],
+                SliverToBoxAdapter(
+                  child: greetingAsync.when(
+                    data: (name) => header(name),
+                    loading: () => header(null),
+                    error: (_, _) => header(null),
+                  ),
+                ),
+                SliverToBoxAdapter(child: SizedBox(height: AppSpacing.spaceMD)),
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.spaceMD,
+                    AppSpacing.spaceSM,
+                    AppSpacing.spaceMD,
+                    AppSpacing.spaceMD,
+                  ),
+                  sliver: SliverList.list(
+                    children: [
+                      // 1. Night header band is full-bleed (own sliver below).
+                      // 2. Week pills restyled on canvas.
+                      WeeklyStreakTracker(
+                        key: const ValueKey('week-pills'),
+                        currentStreak: streak,
+                        completedByWeekday:
+                            homeData?.completedByWeekday ??
+                            List.filled(7, false),
+                        todayWeekday: now.weekday,
+                        transparent: true,
+                      ),
+                      const SizedBox(height: AppSpacing.spaceMD),
+                      // 3. Goal hero with last-read + Continue.
+                      GoalHeroCard(
+                        key: const ValueKey('goal-hero'),
+                        current: todayAyahs,
+                        target: targetAyahs,
+                        lastSurahId: last?.surahId,
+                        lastAyahId: last?.ayahId,
+                      ),
+                      const SizedBox(height: AppSpacing.spaceMD),
+                      // 4. Quick surah chips.
+                      const SurahChips(key: ValueKey('surah-chips')),
+                      const SizedBox(height: AppSpacing.spaceMD),
+                      // 5. Ayah of the Day (verbatim verified data).
+                      const AyahOfDayCard(key: ValueKey('ayah-of-day')),
+                      const SizedBox(height: AppSpacing.spaceMD),
+                      // 6. Daily challenge dark card.
+                      DailyChallengeCard(
+                        key: const ValueKey('challenge-card'),
+                        targetAyahs: targetAyahs,
+                        todayAyahs: todayAyahs,
+                      ),
+                      const SizedBox(height: AppSpacing.spaceMD),
+                      // 7. Stats row with Today/Week/All tabs.
+                      const StatsRow(key: ValueKey('stats-row')),
+                      const SizedBox(height: AppSpacing.spaceMD),
+                      // 8. Family circles card.
+                      const FamilyCirclesHomeCard(key: ValueKey('family-card')),
+                      const SizedBox(height: AppSpacing.spaceMD),
+                      // 9. Next prayer strip.
+                      const NextPrayerStrip(key: ValueKey('prayer-strip')),
+                      const SizedBox(height: AppSpacing.spaceSM),
+                    ],
+                  ),
+                ),
+                const SliverToBoxAdapter(
+                  child: DeenScrollEdgeFade(isTop: false),
+                ),
+                const SliverToBoxAdapter(child: SizedBox(height: 100)),
+              ],
+            ),
           ),
         ],
       ),

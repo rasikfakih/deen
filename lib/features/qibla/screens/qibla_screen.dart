@@ -9,7 +9,7 @@ import '../../../core/theme/app_gradients.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../shared/widgets/deen_card.dart';
-import '../../../shared/widgets/glass/deen_glass_app_bar.dart';
+import '../../../shared/widgets/chrome/deen_app_bar.dart';
 import '../../../shared/widgets/icons/deen_symbol_effects.dart';
 import '../../prayer/data/location_service.dart';
 import '../../prayer/providers/prayer_providers.dart';
@@ -56,7 +56,7 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen> {
       // Non-scrolling screen: no extendBodyBehindAppBar (top-leak rule).
       backgroundColor: Colors.transparent,
       extendBody: true,
-      appBar: const DeenGlassAppBar(title: 'Qibla'),
+      appBar: const DeenAppBar(title: 'Qibla'),
       body: Stack(
         children: [
           Positioned.fill(
@@ -160,10 +160,7 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final dialSize = (constraints.maxWidth - AppSpacing.spaceMD * 2).clamp(
-          200.0,
-          320.0,
-        );
+        final dialSize = math.min(constraints.maxWidth - 32, 420.0);
         return Padding(
           padding: const EdgeInsets.fromLTRB(
             AppSpacing.spaceMD,
@@ -173,17 +170,6 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen> {
           ),
           child: Column(
             children: [
-              Semantics(
-                label: 'Qibla bearing',
-                value: bearingStr,
-                child: Text(
-                  bearingStr,
-                  style: AppTypography.labelMedium.copyWith(
-                    color: AppColors.textMuted,
-                  ),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.spaceSM),
               Expanded(
                 child: Center(
                   child: Stack(
@@ -264,22 +250,36 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen> {
                   ),
                 ),
               ),
-              if (distanceStr.isNotEmpty)
-                Text(
-                  distanceStr,
-                  style: AppTypography.bodySmall.copyWith(
-                    color: AppColors.textMuted,
-                  ),
-                ),
-              const SizedBox(height: AppSpacing.spaceXS),
-              Text(
-                'Qibla ${deltaDeg.toStringAsFixed(0)}° ${isAligned ? '- Aligned!' : ''}',
-                style: AppTypography.titleMedium.copyWith(
-                  color: isAligned
-                      ? AppColors.success
-                      : (isDark ? AppColors.darkOnSurface : AppColors.textDark),
+              // Single bearing statement below the dial (DEEN v6):
+              // line 1 integer degrees, line 2 distance. No top duplicate.
+              Semantics(
+                label: 'Qibla bearing and distance',
+                value:
+                    'Qibla ${bearing.toStringAsFixed(0)} degrees from North'
+                    '${distanceStr.isEmpty ? '' : ', $distanceStr'}',
+                child: Column(
+                  children: [
+                    Text(
+                      'Qibla ${bearing.toStringAsFixed(0)} degrees from North',
+                      style: AppTypography.displayMedium.copyWith(
+                        color: isDark
+                            ? AppColors.darkOnSurface
+                            : AppColors.textDark,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    if (distanceStr.isNotEmpty)
+                      Text(
+                        distanceStr,
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.textMuted,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                  ],
                 ),
               ),
+              const SizedBox(height: AppSpacing.spaceXS),
               Text(
                 isAligned ? 'Face the needle' : 'Rotate device',
                 style: AppTypography.bodySmall.copyWith(
@@ -320,6 +320,9 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen> {
 }
 
 /// Gradient compass needle pointing up (rotated by the parent).
+///
+/// Single closed kite path: tip, left wing, tail notch, right wing.
+/// Pure [kitePath] builder keeps the shape unit-testable.
 class _NeedlePainter extends CustomPainter {
   const _NeedlePainter();
 
@@ -329,29 +332,24 @@ class _NeedlePainter extends CustomPainter {
     final paint = Paint()
       ..shader = AppGradients.goldFlow.createShader(rect)
       ..style = PaintingStyle.fill;
-    final w = size.width;
-    final h = size.height;
-    final path = Path()
-      ..moveTo(w / 2, 0)
-      ..lineTo(w * 0.68, h * 0.62)
-      ..lineTo(w / 2, h * 0.52)
-      ..lineTo(w * 0.32, h * 0.62)
-      ..close();
-    canvas.drawPath(path, paint);
-    final tail = Paint()
-      ..color = AppColors.textMuted
-      ..style = PaintingStyle.fill;
-    final tailPath = Path()
-      ..moveTo(w / 2, h)
-      ..lineTo(w * 0.62, h * 0.66)
-      ..lineTo(w / 2, h * 0.56)
-      ..lineTo(w * 0.38, h * 0.66)
-      ..close();
-    canvas.drawPath(tailPath, tail);
+    canvas.drawPath(kitePath(size), paint);
   }
 
   @override
   bool shouldRepaint(covariant _NeedlePainter oldDelegate) => false;
+}
+
+/// Builds the needle kite in a [size] box: sharp tip at top-center,
+/// wide wings, notched tail. One closed subpath.
+Path kitePath(Size size) {
+  final w = size.width;
+  final h = size.height;
+  return Path()
+    ..moveTo(w / 2, 0)
+    ..lineTo(w * 0.72, h * 0.58)
+    ..lineTo(w / 2, h * 0.72)
+    ..lineTo(w * 0.28, h * 0.58)
+    ..close();
 }
 
 class _DialPainter extends CustomPainter {

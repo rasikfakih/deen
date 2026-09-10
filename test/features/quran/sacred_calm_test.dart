@@ -8,7 +8,7 @@ import 'package:deen/features/quran/providers/quran_providers.dart';
 import 'package:deen/features/quran/screens/quran_reader_screen.dart';
 import 'package:deen/features/settings/providers/settings_providers.dart';
 import 'package:deen/shared/database/deen_database.dart';
-import 'package:deen/shared/widgets/glass/deen_glass_app_bar.dart';
+import 'package:deen/shared/widgets/chrome/deen_app_bar.dart';
 
 void main() {
   group('Sacred calm - Quran reader has no BackdropFilter in ayah list', () {
@@ -23,7 +23,7 @@ void main() {
     });
 
     testWidgets(
-      'QuranReaderScreen - app bar has one BackdropFilter, list has zero',
+      'QuranReaderScreen - app bar has zero BackdropFilter, list has zero',
       (tester) async {
         final fakeAyahs = [
           const QuranAyah(
@@ -62,9 +62,9 @@ void main() {
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 100));
 
-        // Overall screen should have exactly one BackdropFilter from DeenGlassAppBar
-        expect(find.byType(BackdropFilter), findsOneWidget);
-        expect(find.byType(DeenGlassAppBar), findsOneWidget);
+        // Blur is retired (DEEN 8.4): the whole screen has zero filters.
+        expect(find.byType(BackdropFilter), findsNothing);
+        expect(find.byType(DeenAppBar), findsOneWidget);
 
         // Find the Expanded ListView for ayahs
         final listViewFinder = find.byType(ListView);
@@ -77,23 +77,11 @@ void main() {
         }
         // Check that no BackdropFilter is under ListView
         final allFilters = find.byType(BackdropFilter);
-        expect(allFilters, findsOneWidget);
+        expect(allFilters, findsNothing);
 
-        // Ensure that one BackdropFilter is ancestor of AppBar, not ListView
-        final filterElement = tester.element(find.byType(BackdropFilter));
-        bool isInListView = false;
-        filterElement.visitAncestorElements((ancestor) {
-          if (ancestor.widget is ListView) {
-            isInListView = true;
-            return false;
-          }
-          return true;
-        });
-        expect(
-          isInListView,
-          isFalse,
-          reason: 'BackdropFilter must not be inside ListView',
-        );
+        // Ensure no BackdropFilter exists anywhere to be inside a ListView
+        final filterElement = find.byType(BackdropFilter);
+        expect(filterElement, findsNothing);
 
         // Also ensure ayah list body (Expanded) has zero BackdropFilter descendants
         final expandedFinder = find.byType(Expanded);

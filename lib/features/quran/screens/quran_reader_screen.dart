@@ -9,7 +9,8 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/app_constants.dart';
 import '../../../core/utils/screen_insets.dart';
-import '../../../shared/widgets/glass/deen_glass_app_bar.dart';
+import '../../../shared/widgets/chrome/deen_app_bar.dart';
+import '../../../shared/widgets/chrome/deen_chrome.dart';
 import '../../../shared/widgets/icons/deen_symbol_effects.dart';
 import '../../audio/providers/audio_providers.dart';
 import '../../gamification/providers/gamification_providers.dart';
@@ -229,25 +230,32 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> {
 
     return Scaffold(
       extendBodyBehindAppBar: true,
-      backgroundColor: isDark ? AppColors.mushafNight : AppColors.parchment,
-      appBar: DeenGlassAppBar(
+      backgroundColor: isDark ? AppColors.mushafNight : AppColors.readerCanvas,
+      appBar: DeenAppBar(
         title: 'Al-Quran - Text Mode',
         actions: [
           Consumer(
             builder: (context, ref, _) {
               final current = _currentAyah;
+              // Surah-level state: filled gold iff the current surah has
+              // ANY bookmark (DEEN v6 reader spec).
+              final surahHas =
+                  current != null &&
+                  bookmarkedKeys.any(
+                    (k) => k.startsWith('${current.surahId}:'),
+                  );
               final isBookmarked =
                   current != null && bookmarkedKeys.contains(current.key);
               return IconButton(
-                tooltip: isBookmarked ? 'Remove bookmark' : 'Bookmark ayah',
+                tooltip: surahHas ? 'Surah bookmarked' : 'Bookmark ayah',
                 icon: DeenAnimatedIcon(
                   effect: DeenSymbolEffect.bounce,
                   replayKey: isBookmarked,
                   child: Icon(
-                    isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                    surahHas ? Icons.bookmark : Icons.bookmark_border,
                   ),
                 ),
-                color: isBookmarked ? AppColors.gold : null,
+                color: surahHas ? AppColors.gold : null,
                 onPressed: current == null
                     ? null
                     : () async {
@@ -359,74 +367,83 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> {
             _currentAyah = ayahs.first;
           }
 
-          return Column(
-            children: [
-              // Top-leak guard: first content clears the glass app bar.
-              SizedBox(height: topContentPad(context)),
-              // Surah selector + position progress (numeric until R1.5).
-              _SurahSelectorRow(
-                ayahs: ayahs,
-                current: _currentAyah,
-                onSelect: _jumpToSurah,
-              ),
-              _ReaderProgressBar(ayahs: ayahs, current: _currentAyah),
-              // Microcopy per DEEN 3 / 10
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.spaceMD,
-                  vertical: AppSpacing.spaceXS,
+          return DeenChromeListener(
+            child: Column(
+              children: [
+                // Top-leak guard: first content clears the glass app bar.
+                SizedBox(height: topContentPad(context)),
+                // Surah selector + position progress (numeric until R1.5).
+                _SurahSelectorRow(
+                  ayahs: ayahs,
+                  current: _currentAyah,
+                  onSelect: _jumpToSurah,
                 ),
-                color: isDark
-                    ? AppColors.darkSurfaceVariant
-                    : AppColors.lightSurfaceVariant,
-                child: Text(
-                  'Counts are encouragement only; true reward is with Allah.',
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: AppColors.textMuted,
-                    fontStyle: FontStyle.italic,
+                _ReaderProgressBar(ayahs: ayahs, current: _currentAyah),
+                // Microcopy per DEEN 3 / 10
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.spaceMD,
+                    vertical: AppSpacing.spaceXS,
                   ),
-                  textAlign: TextAlign.center,
+                  color: isDark
+                      ? AppColors.darkSurfaceVariant
+                      : AppColors.lightSurfaceVariant,
+                  child: Text(
+                    'Counts are encouragement only; true reward is with Allah.',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: AppColors.textMuted,
+                      fontStyle: FontStyle.italic,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
-              ),
-              Expanded(
-                child: ListView.builder(
-                  controller: _scrollController,
-                  itemCount: ayahs.length,
-                  addAutomaticKeepAlives: false,
-                  addRepaintBoundaries: true,
-                  itemBuilder: (context, index) {
-                    final ayah = ayahs[index];
-                    final prevSurah = index > 0
-                        ? ayahs[index - 1].surahId
-                        : null;
-                    final isSurahHeader = prevSurah != ayah.surahId;
-                    return _AyahCard(
-                      ayah: ayah,
-                      isSurahHeader: isSurahHeader,
-                      isBookmarked: bookmarkedKeys.contains(ayah.key),
-                      loopEnabled: _loopEnabled,
-                      onTap: () {
-                        _registerAyah(ayah);
-                        _updateLastRead(ayah);
-                        setState(() {});
-                      },
-                      onBookmarkToggle: () => _toggleBookmark(ayah),
-                      onPlaySurah: () => _playSurah(ayah.surahId),
-                      onToggleRepeat: _toggleRepeat,
-                      onShare: () => _shareAyah(context, ayah),
-                    );
-                  },
+                Expanded(
+                  child: ListView.builder(
+                    controller: _scrollController,
+                    // First ayah card sits 12dp below the header; no spacer.
+                    padding: const EdgeInsets.only(top: 12),
+                    itemCount: ayahs.length,
+                    addAutomaticKeepAlives: false,
+                    addRepaintBoundaries: true,
+                    itemBuilder: (context, index) {
+                      final ayah = ayahs[index];
+                      final prevSurah = index > 0
+                          ? ayahs[index - 1].surahId
+                          : null;
+                      final isSurahHeader = prevSurah != ayah.surahId;
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          if (isSurahHeader) _SurahBand(surahId: ayah.surahId),
+                          _AyahCard(
+                            ayah: ayah,
+                            isBookmarked: bookmarkedKeys.contains(ayah.key),
+                            loopEnabled: _loopEnabled,
+                            onTap: () {
+                              _registerAyah(ayah);
+                              _updateLastRead(ayah);
+                              setState(() {});
+                            },
+                            onBookmarkToggle: () => _toggleBookmark(ayah),
+                            onPlaySurah: () => _playSurah(ayah.surahId),
+                            onToggleRepeat: _toggleRepeat,
+                            onShare: () => _shareAyah(context, ayah),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
                 ),
-              ),
-              _ReaderActionBar(
-                onPrevious: () => _jumpSurah(ayahs, -1),
-                onNext: () => _jumpSurah(ayahs, 1),
-                onDone: _commitSession,
-                committing: _committing,
-                justCommitted: _justCommitted,
-              ),
-            ],
+                _ReaderActionBar(
+                  onPrevious: () => _jumpSurah(ayahs, -1),
+                  onNext: () => _jumpSurah(ayahs, 1),
+                  onDone: _commitSession,
+                  committing: _committing,
+                  justCommitted: _justCommitted,
+                ),
+              ],
+            ),
           );
         },
       ),
@@ -437,7 +454,6 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> {
 class _AyahCard extends StatelessWidget {
   const _AyahCard({
     required this.ayah,
-    required this.isSurahHeader,
     required this.isBookmarked,
     required this.loopEnabled,
     required this.onTap,
@@ -448,7 +464,6 @@ class _AyahCard extends StatelessWidget {
   });
 
   final QuranAyah ayah;
-  final bool isSurahHeader;
   final bool isBookmarked;
   final bool loopEnabled;
   final VoidCallback onTap;
@@ -460,161 +475,155 @@ class _AyahCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    // White card (darkSurface in dark mode), radius 20, DeenCard shadow.
     return GestureDetector(
       onTap: onTap,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Container(
-            decoration: BoxDecoration(
-              color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-              border: Border(
-                bottom: BorderSide(
-                  color: isDark
-                      ? AppColors.darkOutlineVariant
-                      : AppColors.lightOutlineVariant,
-                  width: 0.5,
-                ),
-              ),
+      child: Container(
+        margin: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.spaceMD,
+          vertical: 6,
+        ),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.darkSurface : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x1A000000),
+              blurRadius: 16,
+              offset: Offset(0, 6),
             ),
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.spaceMD,
-              vertical: AppSpacing.spaceMD,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+          ],
+        ),
+        padding: const EdgeInsets.all(AppSpacing.spaceMD),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                if (isSurahHeader) ...[
-                  Container(
-                    margin: const EdgeInsets.only(bottom: AppSpacing.spaceSM),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.spaceMD,
-                      vertical: AppSpacing.spaceXS,
-                    ),
-                    decoration: BoxDecoration(
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.spaceSM,
+                    vertical: AppSpacing.spaceXS,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? AppColors.darkSurfaceVariant
+                        : AppColors.lightSurfaceVariant,
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+                    border: Border.all(
                       color: isDark
-                          ? AppColors.darkSurfaceVariant
-                          : AppColors.creamDark,
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusSM),
-                    ),
-                    child: Text(
-                      'Surah ${ayah.surahId}',
-                      style: AppTypography.labelMedium.copyWith(
-                        color: isDark
-                            ? AppColors.darkOnSurface
-                            : AppColors.textDark,
-                        letterSpacing: 1.2,
-                      ),
-                      textAlign: TextAlign.center,
+                          ? AppColors.darkOutline
+                          : AppColors.lightOutline,
                     ),
                   ),
-                ],
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.spaceSM,
-                        vertical: AppSpacing.spaceXS,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isDark
-                            ? AppColors.darkSurfaceVariant
-                            : AppColors.lightSurfaceVariant,
-                        borderRadius: BorderRadius.circular(
-                          AppSpacing.radiusFull,
-                        ),
-                        border: Border.all(
-                          color: isDark
-                              ? AppColors.darkOutline
-                              : AppColors.lightOutline,
-                        ),
-                      ),
-                      child: Text(
-                        '${ayah.surahId}:${ayah.ayahId}',
-                        style: AppTypography.labelSmall.copyWith(
-                          color: AppColors.textMuted,
-                        ),
-                      ),
-                    ),
-                    const Spacer(),
-                    _CardAction(
-                      tooltip: 'Play Surah',
-                      icon: Icons.play_arrow,
-                      onTap: onPlaySurah,
-                    ),
-                    _CardAction(
-                      tooltip: loopEnabled ? 'Stop repeat' : 'Repeat surah',
-                      icon: Icons.repeat,
-                      active: loopEnabled,
-                      onTap: onToggleRepeat,
-                    ),
-                    _CardAction(
-                      tooltip: 'Copy ayah',
-                      icon: Icons.share_outlined,
-                      onTap: onShare,
-                    ),
-                    InkWell(
-                      onTap: onBookmarkToggle,
-                      borderRadius: BorderRadius.circular(
-                        AppSpacing.radiusFull,
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(AppSpacing.spaceXS),
-                        child: DeenAnimatedIcon(
-                          effect: DeenSymbolEffect.bounce,
-                          replayKey: isBookmarked,
-                          child: Icon(
-                            isBookmarked
-                                ? Icons.bookmark
-                                : Icons.bookmark_border,
-                            size: AppSpacing.iconSM,
-                            color: isBookmarked
-                                ? AppColors.gold
-                                : AppColors.textMuted,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.spaceSM),
-                // Arabic - RTL, Tajawal via app_typography
-                Directionality(
-                  textDirection: TextDirection.rtl,
                   child: Text(
-                    ayah.arabic,
-                    style: AppTypography.arabicStyle(
-                      fontSize: 24,
-                      height: 1.8,
-                      color: isDark
-                          ? AppColors.darkOnSurface
-                          : AppColors.textDark,
-                      fontWeight: FontWeight.w500,
+                    '${ayah.surahId}:${ayah.ayahId}',
+                    style: AppTypography.labelSmall.copyWith(
+                      color: AppColors.textMuted,
                     ),
-                    textAlign: TextAlign.right,
+                  ),
+                ),
+                const Spacer(),
+                _CardAction(
+                  tooltip: 'Play Surah',
+                  icon: Icons.play_arrow,
+                  onTap: onPlaySurah,
+                ),
+                _CardAction(
+                  tooltip: loopEnabled ? 'Stop repeat' : 'Repeat surah',
+                  icon: Icons.repeat,
+                  active: loopEnabled,
+                  onTap: onToggleRepeat,
+                ),
+                _CardAction(
+                  tooltip: 'Copy ayah',
+                  icon: Icons.share_outlined,
+                  onTap: onShare,
+                ),
+                InkWell(
+                  onTap: onBookmarkToggle,
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSpacing.spaceXS),
+                    child: DeenAnimatedIcon(
+                      effect: DeenSymbolEffect.bounce,
+                      replayKey: isBookmarked,
+                      child: Icon(
+                        isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                        size: AppSpacing.iconSM,
+                        color: isBookmarked
+                            ? AppColors.gold
+                            : AppColors.textMuted,
+                      ),
+                    ),
                   ),
                 ),
               ],
             ),
-          ),
-          // Translation sits below the card, outside the Arabic surface.
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.spaceMD,
-              AppSpacing.spaceSM,
-              AppSpacing.spaceMD,
-              AppSpacing.spaceMD,
+            const SizedBox(height: AppSpacing.spaceSM),
+            // Arabic - RTL, Tajawal via app_typography
+            Directionality(
+              textDirection: TextDirection.rtl,
+              child: Text(
+                ayah.arabic,
+                style: AppTypography.arabicStyle(
+                  fontSize: 24,
+                  height: 1.8,
+                  color: isDark ? AppColors.darkOnSurface : AppColors.textDark,
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.right,
+              ),
             ),
-            child: Text(
+            const SizedBox(height: AppSpacing.spaceSM),
+            // Translation lives INSIDE the white card (v6 composition).
+            Text(
               ayah.english,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: isDark ? const Color(0xFFC2B8A8) : AppColors.textMuted,
                 height: 1.5,
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Full-bleed night surah band with gold title (numeric until R1.5).
+class _SurahBand extends StatelessWidget {
+  const _SurahBand({required this.surahId});
+
+  final int surahId;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      label: 'Surah $surahId',
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.spaceMD,
+          vertical: AppSpacing.spaceSM,
+        ),
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF191410), Color(0xFF2A2018)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
           ),
-        ],
+        ),
+        child: Text(
+          'Surah $surahId',
+          style: AppTypography.titleMedium.copyWith(
+            color: AppColors.gold,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 1.2,
+          ),
+          textAlign: TextAlign.center,
+        ),
       ),
     );
   }
@@ -866,9 +875,20 @@ class _ReaderActionBar extends StatelessWidget {
             child: Semantics(
               button: true,
               label: 'Previous surah',
-              child: OutlinedButton(
-                onPressed: () => onPrevious(),
-                child: const Text('Previous'),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: OutlinedButton.icon(
+                  onPressed: () => onPrevious(),
+                  icon: const Icon(Icons.chevron_left, size: 18),
+                  label: const Text(
+                    'Prev',
+                    maxLines: 1,
+                    overflow: TextOverflow.visible,
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(0, 48),
+                  ),
+                ),
               ),
             ),
           ),

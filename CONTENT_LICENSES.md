@@ -28,4 +28,9 @@ Content licenses are **per source**. Data is stored exactly as imported and neve
 
 - UI fonts (Poppins, Tajawal/Cairo) and Mushaf fonts (Amiri Quran / KFGQPC Uthman Taha) are bundled with their OFL licenses in `assets/fonts/`. No runtime font downloads.
 
+## Icons
+
+- **Lucide Icons:** [ISC license](https://lucide.dev/license) — 31 commodity glyphs vendored into `assets/icons/` (ic_home, ic_quran, ic_settings, ic_search, ic_bookmark, ic_bookmark_filled, ic_share, ic_close, ic_back, ic_copy, ic_external, ic_play, ic_pause, ic_speed, ic_next, ic_prev, ic_location, ic_bell, ic_clock, ic_streak, ic_freeze, ic_target, ic_trophy, ic_family, ic_invite, ic_heart, ic_check, ic_chevron_right, ic_chevron_left, ic_moon, ic_sun). Stroke width normalized from 2.0 to the Deen spec 1.8 on ingestion; geometry otherwise verbatim upstream. Source: https://lucide.dev (one-time ingestion, no clone kept in repo).
+- **Custom identity set:** 10 original Deen glyphs (ic_hasanat, ic_badge_star, ic_tasbih, ic_qibla, ic_fajr, ic_sunrise, ic_dhuhr, ic_asr, ic_maghrib, ic_isha) drawn to the same 24x24 / 1.8 / round-cap spec. Same license as app code unless elevated to founder-crafted artwork later.
+
 If any source changes its license, we update this file and re-verify checksums before the next release.

@@ -4,8 +4,8 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_gradients.dart';
 import '../../core/theme/app_spacing.dart';
 
-/// Design v3 card system (DEEN 8.2). Opaque surfaces only — never glass,
-/// never blurred. Radius 24, soft shadow, subtle inner top highlight.
+/// Design v6 card system (DEEN 8.2 + 8.4). Opaque surfaces, separation via
+/// shadow only: no top hairline, no outline borders. Radius 24.
 class DeenCard extends StatelessWidget {
   const DeenCard({super.key, required this.child, this.padding});
 
@@ -21,48 +21,15 @@ class DeenCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkSurface : Colors.white,
         borderRadius: BorderRadius.circular(AppSpacing.radiusXL),
-        border: Border.all(
-          color: isDark
-              ? AppColors.darkOutlineVariant
-              : AppColors.lightOutlineVariant,
-        ),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
-            color: isDark ? AppColors.shadowDark : AppColors.shadowLight,
-            blurRadius: AppSpacing.elevationSM,
-            offset: const Offset(0, 2),
+            color: Color(0x1A000000),
+            blurRadius: 16,
+            offset: Offset(0, 6),
           ),
         ],
       ),
-      child: Stack(
-        children: [
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            height: 1.2,
-            child: IgnorePointer(
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(AppSpacing.radiusXL),
-                    topRight: Radius.circular(AppSpacing.radiusXL),
-                  ),
-                  gradient: LinearGradient(
-                    colors: [
-                      Colors.white.withValues(alpha: isDark ? 0.08 : 0.7),
-                      Colors.transparent,
-                    ],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          child,
-        ],
-      ),
+      child: child,
     );
   }
 }
@@ -99,8 +66,8 @@ class DeenHeroCard extends StatelessWidget {
         boxShadow: const [
           BoxShadow(
             color: AppColors.shadowDark,
-            blurRadius: AppSpacing.elevationLG,
-            offset: Offset(0, 4),
+            blurRadius: 24,
+            offset: Offset(0, 10),
           ),
         ],
       ),
