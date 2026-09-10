@@ -147,9 +147,9 @@ Palette:
 - Emerald accent: #0E9F6E (emeraldDark #0B6B4C for text on light)
 - Hasanat spark: #FFC25C
 - Canvas night: #0C1512 to #10201A; parchment reader light: #F4EEE1; mushaf night: #16130F
-- Glass nav tint v5: white 0.03 light / black 0.03 dark (reverses the warm
-  0.62 tint for the dense canvas; definition via sheen border, specular
-  line, shadow; guarded by the nav visibility test)
+- Chrome v6 (supersedes all glass tints: 0.62 warm and 0.03): opaque dock
+  (white light / #1E1B16 dark) and opaque app bar (cream / #121212).
+  See 8.4.
 
 Typography:
 - Latin UI: Poppins
@@ -165,7 +165,10 @@ Rules:
 - Beautiful empty states and illustrations. No generic Material defaults.
 - Dark mode is a first-class theme, not an afterthought.
 
-### 8.1 Design v2: Liquid Glass
+### 8.1 Design v2: Liquid Glass (SUPERSEDED by 8.4 — retained for history)
+
+> v6 retired Android blur emulation. Opaque chrome (dock + app bar) replaces
+> every rule below. See 8.4.
 
 - Glass on navigation layer only (bars, floating controls, sheets). Never on content lists. The Quran reader screen must remain calm with no glass over the ayah list.
 - v5 nav bar: ultra-transparent 3% theme-aware base (white light / black dark), BackdropFilter sigma 16 (9.6 elderly), diffuse gold indicator wash 0.18 + blur 12, 1px specular top line white 0.22, quintic transitions, RepaintBoundary kept, exactly one filter, no nesting.
@@ -181,8 +184,8 @@ Rules:
 
 - Home paints theme-aware canvas gradients (dawn cream + gold glow; night green-black + gold/emerald glows) as opaque BoxDecorations behind scrolling content. No blur on canvas.
 - Girih pattern overlay (`assets/patterns/pattern_star.svg`, NOT in the icon registry) tiles statically at 0.04 light / 0.06 dark, IgnorePointer, RepaintBoundary, semantics-excluded.
-- Card system: DeenCard (opaque, radius 24, soft shadow, top highlight) and DeenHeroCard (gold/emerald/night gradient variants). Content cards are never glass.
-- Glass stays on DeenGlassAppBar + DeenGlassNavBar only. Scroll edge fades required top (under app bar) and bottom (above nav bar) wherever glass meets scrolling content.
+- Card system: DeenCard (opaque, radius 24, soft shadow, top highlight) and DeenHeroCard (gold/emerald/night gradient variants). Content cards were never glass; v6 keeps them opaque (see 8.4).
+- Glass stays on DeenAppBar + DeenDock only (renamed from DeenGlassAppBar + DeenGlassNavBar in v6; zero blur). Scroll edge fades required top (under app bar) and bottom (above nav bar) wherever chrome meets scrolling content.
 - Elderly Mode scales all v3 modules through the existing text scaler; no new glow or animation paths. New modules carry semantics labels; Arabic lines use RTL directionality.
 - Surah labels stay numeric (Surah N) until the R1.5 checksum-verified surah-metadata pipeline lands; no unverified religious metadata in UI.
 
@@ -190,6 +193,25 @@ Rules:
 
 - Text scaler clamp 1.3 (main.dart): remove once the overflow matrix (320x480, 1280x800, landscape) passes at 1.5. Elderly 1.2 path is permanent.
 - R1.5 surah-metadata pipeline is the precondition for named surah labels before R2.
+
+### 8.4 Android blur retirement (v6 doctrine)
+
+- BackdropFilter emulation is retired on Android: over saturated canvas
+  content it smeared into smudge, and the 1px specular hairlines that
+  carry the design vanished at device density. Opaque chrome replaces it.
+- Deen Dock: opaque surface (white light / #1E1B16 dark, alpha 1.0),
+  radius 28, horizontal margin 12, bottom margin max(12, viewPadding),
+  shadow 0x29000000 blur 24 offset (0,8). Selected item: goldFlow pill,
+  icon and label #4A2E08 on light and #FFF8EE on dark; unselected
+  #6B6257 light and #C9BBA8 dark. Quintic transitions, bounce retained.
+- Deen app bar: solid surface equal to the canvas top (cream #F9F6F0
+  light / #121212 dark), elevation 0, zero blur. A 1px 0x14000000
+  hairline fades in only past 8px of scroll, driven by
+  deenChromeHairlineProvider fed by DeenChromeListener at scroll roots.
+- Nomenclature: widgets/glass renamed to widgets/chrome; DeenGlassNavBar
+  to DeenDock, DeenGlassAppBar to DeenAppBar; DeenGlassScrollWrapper,
+  glassLight, and glassDark removed as verified dead.
+- Zero BackdropFilter in lib/ is enforced by the dock test suite.
 
 ---
 
@@ -279,6 +301,8 @@ P2, immediately after release:
 - Golden tests for reader typography and page-image overlay alignment.
 - scripts/verify_quran_integrity.dart runs in CI on every PR.
 - CI on GitHub Actions: dart format check, flutter analyze, flutter test, integrity script. All must pass to merge.
+- Test inventory notes:
+  - loop-mode (`audio_service_test.dart`): skipped headless with reason — just_audio method channels are per-player dynamic and unreachable from `flutter_test`; verified by build and wiring review instead. Follow-up: consider a thin injectable LoopController seam behind AudioService so this becomes trivially testable (no refactor scheduled).
 
 ---
 

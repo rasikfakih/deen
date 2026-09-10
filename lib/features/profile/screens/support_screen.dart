@@ -6,7 +6,8 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/screen_insets.dart';
 import '../../../core/utils/app_constants.dart';
-import '../../../shared/widgets/glass/deen_glass_app_bar.dart';
+import '../../../shared/widgets/chrome/deen_app_bar.dart';
+import '../../../shared/widgets/chrome/deen_chrome.dart';
 
 class SupportScreen extends StatelessWidget {
   const SupportScreen({super.key});
@@ -26,99 +27,101 @@ class SupportScreen extends StatelessWidget {
       backgroundColor: isDark
           ? AppColors.darkBackgroundSemantic
           : AppColors.lightBackground,
-      appBar: const DeenGlassAppBar(title: 'Support Deen'),
-      body: ListView(
-        padding: EdgeInsets.fromLTRB(
-          AppSpacing.spaceMD,
-          topContentPad(context),
-          AppSpacing.spaceMD,
-          100,
-        ),
-        children: [
-          Text(
-            'Deen is 100 percent free and open source',
-            style: AppTypography.headlineSmall.copyWith(
-              color: isDark ? AppColors.darkOnSurface : AppColors.textDark,
-            ),
+      appBar: const DeenAppBar(title: 'Support Deen'),
+      body: DeenChromeListener(
+        child: ListView(
+          padding: EdgeInsets.fromLTRB(
+            AppSpacing.spaceMD,
+            topContentPad(context),
+            AppSpacing.spaceMD,
+            100,
           ),
-          const SizedBox(height: AppSpacing.spaceSM),
-          Text(
-            'Maintained by Rasik Fakih',
-            style: AppTypography.labelMedium.copyWith(
-              color: AppColors.textMuted,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.spaceSM),
-          Text(
-            'There are no ads, no paywalls, and no data selling. Server costs for the Quran CDN, audio streaming, and optional sync are paid out of pocket to keep the app free for everyone, forever.',
-            style: AppTypography.bodyMedium.copyWith(
-              color: AppColors.textMuted,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.spaceLG),
-          Text(
-            'Your support is a Sadaqah Jariyah. Every donation helps us cover infrastructure and keep the project sustainable without ever charging users.',
-            style: AppTypography.bodyMedium.copyWith(
-              color: AppColors.textMuted,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.spaceXL),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: () => _openUrl(AppConstants.githubSponsorsUrl),
-              icon: const Icon(Icons.favorite_border),
-              label: const Text('Support on GitHub Sponsors'),
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  vertical: AppSpacing.spaceMD,
-                ),
+          children: [
+            Text(
+              'Deen is 100 percent free and open source',
+              style: AppTypography.headlineSmall.copyWith(
+                color: isDark ? AppColors.darkOnSurface : AppColors.textDark,
               ),
             ),
-          ),
-          const SizedBox(height: AppSpacing.spaceSM),
-          // Stripe is shown only when STRIPE_DONATE_URL is configured at
-          // release time. No test/placeholder URL ships to production.
-          if (AppConstants.stripeDonateUrl.isNotEmpty)
+            const SizedBox(height: AppSpacing.spaceSM),
+            Text(
+              'Maintained by Rasik Fakih',
+              style: AppTypography.labelMedium.copyWith(
+                color: AppColors.textMuted,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.spaceSM),
+            Text(
+              'There are no ads, no paywalls, and no data selling. Server costs for the Quran CDN, audio streaming, and optional sync are paid out of pocket to keep the app free for everyone, forever.',
+              style: AppTypography.bodyMedium.copyWith(
+                color: AppColors.textMuted,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.spaceLG),
+            Text(
+              'Your support is a Sadaqah Jariyah. Every donation helps us cover infrastructure and keep the project sustainable without ever charging users.',
+              style: AppTypography.bodyMedium.copyWith(
+                color: AppColors.textMuted,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.spaceXL),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: () => _openUrl(AppConstants.stripeDonateUrl),
-                icon: const Icon(Icons.payment_outlined),
-                label: const Text('Donate via Stripe'),
+                onPressed: () => _openUrl(AppConstants.githubSponsorsUrl),
+                icon: const Icon(Icons.favorite_border),
+                label: const Text('Support on GitHub Sponsors'),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(
                     vertical: AppSpacing.spaceMD,
                   ),
                 ),
               ),
-            )
-          else
+            ),
+            const SizedBox(height: AppSpacing.spaceSM),
+            // Stripe is shown only when STRIPE_DONATE_URL is configured at
+            // release time. No test/placeholder URL ships to production.
+            if (AppConstants.stripeDonateUrl.isNotEmpty)
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () => _openUrl(AppConstants.stripeDonateUrl),
+                  icon: const Icon(Icons.payment_outlined),
+                  label: const Text('Donate via Stripe'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: AppSpacing.spaceMD,
+                    ),
+                  ),
+                ),
+              )
+            else
+              Text(
+                'Card donations via Stripe are coming soon — GitHub Sponsors works today.',
+                style: AppTypography.bodySmall.copyWith(
+                  color: AppColors.textMuted,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            const SizedBox(height: AppSpacing.spaceXL),
             Text(
-              'Card donations via Stripe are coming soon — GitHub Sponsors works today.',
+              'Thank you for helping keep Deen free for every person on earth.',
               style: AppTypography.bodySmall.copyWith(
+                color: AppColors.textMuted,
+                fontStyle: FontStyle.italic,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppSpacing.spaceSM),
+            Text(
+              'JazakAllahu Khairan for your generosity.',
+              style: AppTypography.labelSmall.copyWith(
                 color: AppColors.textMuted,
               ),
               textAlign: TextAlign.center,
             ),
-          const SizedBox(height: AppSpacing.spaceXL),
-          Text(
-            'Thank you for helping keep Deen free for every person on earth.',
-            style: AppTypography.bodySmall.copyWith(
-              color: AppColors.textMuted,
-              fontStyle: FontStyle.italic,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: AppSpacing.spaceSM),
-          Text(
-            'JazakAllahu Khairan for your generosity.',
-            style: AppTypography.labelSmall.copyWith(
-              color: AppColors.textMuted,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

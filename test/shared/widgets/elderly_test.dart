@@ -2,50 +2,68 @@
 
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:deen/core/theme/app_gradients.dart';
 import 'package:deen/features/settings/providers/settings_providers.dart';
 import 'package:deen/shared/database/deen_database.dart';
-import 'package:deen/shared/widgets/glass/deen_glass.dart';
-import 'package:deen/shared/widgets/glass/glass_metrics.dart';
+import 'package:deen/shared/widgets/icons/deen_symbol_effects.dart';
 
 void main() {
-  group('GlassMetrics elderly blur', () {
-    test('effectiveSigma returns base * 0.6 when elderly', () {
-      expect(GlassMetrics.effectiveSigma(16, true), closeTo(9.6, 0.001));
-      expect(GlassMetrics.effectiveSigma(18, true), closeTo(10.8, 0.001));
-      expect(GlassMetrics.effectiveSigma(16, false), 16);
-      expect(GlassMetrics.effectiveSigma(18, false), 18);
+  group('Elderly static effects (DEEN 8.4: blur retired, motion gated)', () {
+    ProviderScope wrap(Widget child, {required bool elderly}) {
+      final db = DeenDatabase.forTesting(NativeDatabase.memory());
+      return ProviderScope(
+        overrides: [
+          deenDatabaseProvider.overrideWithValue(db),
+          elderlyModeProvider.overrideWith((ref) => Stream.value(elderly)),
+          themeModeProvider.overrideWith(
+            (ref) => Stream.value(ThemeMode.light),
+          ),
+        ],
+        child: MaterialApp(home: Scaffold(body: child)),
+      );
+    }
+
+    testWidgets('elderly mode resolves every effect to static', (tester) async {
+      for (final effect in [
+        DeenSymbolEffect.bounce,
+        DeenSymbolEffect.pulse,
+        DeenSymbolEffect.shimmer,
+      ]) {
+        await tester.pumpWidget(
+          wrap(
+            DeenAnimatedIcon(
+              asset: 'assets/icons/ic_home.svg',
+              effect: effect,
+              replayKey: 1,
+            ),
+            elderly: true,
+          ),
+        );
+        await tester.pump();
+        // Static glyph: no flutter_animate wrapper in the tree.
+        expect(find.byType(Animate), findsNothing);
+      }
     });
 
-    testWidgets('elderly mode uses reduced blur via GlassMetrics', (
-      tester,
-    ) async {
-      // Verify helper is used: DeenGlass delegates to GlassMetrics.effectiveSigma
-      // Direct unit test of helper covers widget behavior (filter is ImageFilter.blur)
-      expect(GlassMetrics.effectiveSigma(16, true), closeTo(9.6, 0.001));
-      expect(GlassMetrics.effectiveSigma(16, false), 16);
-
-      final db = DeenDatabase.forTesting(NativeDatabase.memory());
-      addTearDown(() async => db.close());
-
+    testWidgets('non-elderly mode keeps effects animated', (tester) async {
       await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            deenDatabaseProvider.overrideWithValue(db),
-            elderlyModeProvider.overrideWith((ref) => Stream.value(true)),
-          ],
-          child: const MaterialApp(
-            home: Scaffold(body: DeenGlass(child: Text('x'))),
+        wrap(
+          const DeenAnimatedIcon(
+            asset: 'assets/icons/ic_home.svg',
+            effect: DeenSymbolEffect.bounce,
+            replayKey: 1,
           ),
+          elderly: false,
         ),
       );
       await tester.pump();
+      // Elapse past animate's mount timer so teardown stays clean.
       await tester.pump(const Duration(milliseconds: 100));
-      expect(find.byType(BackdropFilter), findsOneWidget);
-      expect(find.byType(DeenGlass), findsOneWidget);
+      expect(find.byType(Animate), findsOneWidget);
     });
 
     testWidgets('tasbih orb has no glow in elderly mode (soft static shadow)', (

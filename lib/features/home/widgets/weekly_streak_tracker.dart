@@ -94,7 +94,7 @@ class WeeklyStreakTracker extends ConsumerWidget {
                 style: AppTypography.titleMedium.copyWith(
                   color: isDark ? AppColors.darkOnSurface : AppColors.textDark,
                 ),
-                maxLines: 1,
+                maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
             ),

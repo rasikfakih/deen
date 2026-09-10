@@ -8,7 +8,8 @@ import '../../../shared/services/notification_service.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/screen_insets.dart';
-import '../../../shared/widgets/glass/deen_glass_app_bar.dart';
+import '../../../shared/widgets/chrome/deen_app_bar.dart';
+import '../../../shared/widgets/chrome/deen_chrome.dart';
 import '../providers/settings_providers.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -98,202 +99,209 @@ class SettingsScreen extends ConsumerWidget {
 
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: const DeenGlassAppBar(title: 'Settings'),
-      body: ListView(
-        padding: EdgeInsets.fromLTRB(
-          AppSpacing.spaceMD,
-          topContentPad(context),
-          AppSpacing.spaceMD,
-          100,
-        ),
-        children: [
-          Text('Appearance', style: AppTypography.titleMedium),
-          const SizedBox(height: AppSpacing.spaceSM),
-          themeAsync.when(
-            data: (mode) => DropdownButtonFormField<ThemeMode>(
-              initialValue: mode,
-              decoration: const InputDecoration(
-                labelText: 'Theme Mode',
-                border: OutlineInputBorder(),
-              ),
-              items: const [
-                DropdownMenuItem(
-                  value: ThemeMode.system,
-                  child: Text('System'),
-                ),
-                DropdownMenuItem(value: ThemeMode.light, child: Text('Light')),
-                DropdownMenuItem(value: ThemeMode.dark, child: Text('Dark')),
-              ],
-              onChanged: (v) {
-                if (v != null) saveThemeMode(ref, v);
-              },
-            ),
-            loading: () => const LinearProgressIndicator(),
-            error: (_, _) => const Text('Error loading theme'),
+      appBar: const DeenAppBar(title: 'Settings'),
+      body: DeenChromeListener(
+        child: ListView(
+          padding: EdgeInsets.fromLTRB(
+            AppSpacing.spaceMD,
+            topContentPad(context),
+            AppSpacing.spaceMD,
+            100,
           ),
-          const SizedBox(height: AppSpacing.spaceMD),
-          elderlyAsync.when(
-            data: (enabled) => SwitchListTile(
-              title: Text('Elderly Mode', style: AppTypography.titleMedium),
-              subtitle: Text(
-                'Increases text size by 20 percent and reduces motion',
-                style: AppTypography.bodySmall,
-              ),
-              value: enabled,
-              onChanged: (v) => saveElderlyMode(ref, v),
-            ),
-            loading: () => const SwitchListTile(
-              title: Text('Elderly Mode'),
-              value: false,
-              onChanged: null,
-            ),
-            error: (_, _) => const Text('Error loading elderly mode'),
-          ),
-          const Divider(height: AppSpacing.spaceXL),
-          Text('Prayer', style: AppTypography.titleMedium),
-          const SizedBox(height: AppSpacing.spaceSM),
-          methodAsync.when(
-            data: (method) => DropdownButtonFormField<CalculationMethod>(
-              initialValue: method,
-              decoration: const InputDecoration(
-                labelText: 'Calculation Method',
-                border: OutlineInputBorder(),
-              ),
-              items: const [
-                DropdownMenuItem(
-                  value: CalculationMethod.muslim_world_league,
-                  child: Text('Muslim World League'),
+          children: [
+            Text('Appearance', style: AppTypography.titleMedium),
+            const SizedBox(height: AppSpacing.spaceSM),
+            themeAsync.when(
+              data: (mode) => DropdownButtonFormField<ThemeMode>(
+                initialValue: mode,
+                decoration: const InputDecoration(
+                  labelText: 'Theme Mode',
+                  border: OutlineInputBorder(),
                 ),
-                DropdownMenuItem(
-                  value: CalculationMethod.north_america,
-                  child: Text('ISNA'),
-                ),
-                DropdownMenuItem(
-                  value: CalculationMethod.egyptian,
-                  child: Text('Egypt'),
-                ),
-                DropdownMenuItem(
-                  value: CalculationMethod.umm_al_qura,
-                  child: Text('Makkah'),
-                ),
-                DropdownMenuItem(
-                  value: CalculationMethod.karachi,
-                  child: Text('Karachi'),
-                ),
-              ],
-              onChanged: (v) {
-                if (v != null) savePrayerMethod(ref, v);
-              },
-            ),
-            loading: () => const LinearProgressIndicator(),
-            error: (_, _) => const Text('Error loading method'),
-          ),
-          const SizedBox(height: AppSpacing.spaceSM),
-          Text(
-            'Current: ${methodAsync.valueOrNull != null ? _methodName(methodAsync.valueOrNull!) : ''}',
-            style: AppTypography.bodySmall,
-          ),
-          const SizedBox(height: AppSpacing.spaceXL),
-          Text('Reminders', style: AppTypography.titleMedium),
-          const SizedBox(height: AppSpacing.spaceSM),
-          Consumer(
-            builder: (context, ref, _) {
-              final timeAsync = ref.watch(dailyReminderTimeProvider);
-              return timeAsync.when(
-                data: (time) => ListTile(
-                  title: Text(
-                    time == null
-                        ? 'Daily reading reminder'
-                        : 'Daily reminder at ${time.format(context)}',
+                items: const [
+                  DropdownMenuItem(
+                    value: ThemeMode.system,
+                    child: Text('System'),
                   ),
-                  subtitle: const Text('Tap to pick time'),
-                  trailing: const Icon(Icons.access_time),
-                  onTap: () async {
-                    final picked = await showTimePicker(
-                      context: context,
-                      initialTime: time ?? const TimeOfDay(hour: 8, minute: 0),
-                    );
-                    if (picked != null) {
-                      await saveDailyReminderTime(ref, picked);
-                      await NotificationService.instance
-                          .scheduleDailyReadingReminder(picked);
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              'Reminder set for ${picked.format(context)}',
-                            ),
-                          ),
-                        );
-                      }
-                    }
-                  },
+                  DropdownMenuItem(
+                    value: ThemeMode.light,
+                    child: Text('Light'),
+                  ),
+                  DropdownMenuItem(value: ThemeMode.dark, child: Text('Dark')),
+                ],
+                onChanged: (v) {
+                  if (v != null) saveThemeMode(ref, v);
+                },
+              ),
+              loading: () => const LinearProgressIndicator(),
+              error: (_, _) => const Text('Error loading theme'),
+            ),
+            const SizedBox(height: AppSpacing.spaceMD),
+            elderlyAsync.when(
+              data: (enabled) => SwitchListTile(
+                title: Text('Elderly Mode', style: AppTypography.titleMedium),
+                subtitle: Text(
+                  'Increases text size by 20 percent and reduces motion',
+                  style: AppTypography.bodySmall,
                 ),
-                loading: () => const ListTile(title: Text('Loading reminder')),
-                error: (_, _) =>
-                    const ListTile(title: Text('Error loading reminder')),
-              );
-            },
-          ),
-          TextButton(
-            onPressed: () => context.push('/notifications'),
-            child: const Text('Open Notification Settings'),
-          ),
-          const SizedBox(height: AppSpacing.spaceXL),
-          Text('About', style: AppTypography.titleMedium),
-          const SizedBox(height: AppSpacing.spaceSM),
-          Text(
-            'Deen is free forever, no ads, offline first. Your data stays on your device.',
-            style: AppTypography.bodySmall,
-          ),
-          const SizedBox(height: AppSpacing.spaceLG),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: () => context.push('/support'),
-              icon: const Icon(Icons.favorite_border),
-              label: const Text('Support the App'),
-            ),
-          ),
-          const Divider(height: AppSpacing.spaceXL),
-          Text('Privacy & Data', style: AppTypography.titleMedium),
-          const SizedBox(height: AppSpacing.spaceSM),
-          analyticsAsync.when(
-            data: (enabled) => SwitchListTile(
-              title: Text(
-                'Analytics (opt-in)',
-                style: AppTypography.titleMedium,
+                value: enabled,
+                onChanged: (v) => saveElderlyMode(ref, v),
               ),
-              subtitle: Text(
-                'Minimal, anonymous. Never logs verses read or search text.',
-                style: AppTypography.bodySmall,
+              loading: () => const SwitchListTile(
+                title: Text('Elderly Mode'),
+                value: false,
+                onChanged: null,
               ),
-              value: enabled,
-              onChanged: (v) => saveAnalyticsOptIn(ref, v),
+              error: (_, _) => const Text('Error loading elderly mode'),
             ),
-            loading: () => const SwitchListTile(
-              title: Text('Analytics (opt-in)'),
-              value: false,
-              onChanged: null,
+            const Divider(height: AppSpacing.spaceXL),
+            Text('Prayer', style: AppTypography.titleMedium),
+            const SizedBox(height: AppSpacing.spaceSM),
+            methodAsync.when(
+              data: (method) => DropdownButtonFormField<CalculationMethod>(
+                initialValue: method,
+                decoration: const InputDecoration(
+                  labelText: 'Calculation Method',
+                  border: OutlineInputBorder(),
+                ),
+                items: const [
+                  DropdownMenuItem(
+                    value: CalculationMethod.muslim_world_league,
+                    child: Text('Muslim World League'),
+                  ),
+                  DropdownMenuItem(
+                    value: CalculationMethod.north_america,
+                    child: Text('ISNA'),
+                  ),
+                  DropdownMenuItem(
+                    value: CalculationMethod.egyptian,
+                    child: Text('Egypt'),
+                  ),
+                  DropdownMenuItem(
+                    value: CalculationMethod.umm_al_qura,
+                    child: Text('Makkah'),
+                  ),
+                  DropdownMenuItem(
+                    value: CalculationMethod.karachi,
+                    child: Text('Karachi'),
+                  ),
+                ],
+                onChanged: (v) {
+                  if (v != null) savePrayerMethod(ref, v);
+                },
+              ),
+              loading: () => const LinearProgressIndicator(),
+              error: (_, _) => const Text('Error loading method'),
             ),
-            error: (_, _) => const Text('Error loading analytics setting'),
-          ),
-          const SizedBox(height: AppSpacing.spaceSM),
-          OutlinedButton.icon(
-            onPressed: () => _exportData(context, ref),
-            icon: const Icon(Icons.download_outlined),
-            label: const Text('Export my data'),
-          ),
-          const SizedBox(height: AppSpacing.spaceSM),
-          OutlinedButton.icon(
-            onPressed: () => _confirmDelete(context, ref),
-            icon: const Icon(Icons.delete_outline, color: Colors.red),
-            label: const Text(
-              'Delete my data',
-              style: TextStyle(color: Colors.red),
+            const SizedBox(height: AppSpacing.spaceSM),
+            Text(
+              'Current: ${methodAsync.valueOrNull != null ? _methodName(methodAsync.valueOrNull!) : ''}',
+              style: AppTypography.bodySmall,
             ),
-          ),
-        ],
+            const SizedBox(height: AppSpacing.spaceXL),
+            Text('Reminders', style: AppTypography.titleMedium),
+            const SizedBox(height: AppSpacing.spaceSM),
+            Consumer(
+              builder: (context, ref, _) {
+                final timeAsync = ref.watch(dailyReminderTimeProvider);
+                return timeAsync.when(
+                  data: (time) => ListTile(
+                    title: Text(
+                      time == null
+                          ? 'Daily reading reminder'
+                          : 'Daily reminder at ${time.format(context)}',
+                    ),
+                    subtitle: const Text('Tap to pick time'),
+                    trailing: const Icon(Icons.access_time),
+                    onTap: () async {
+                      final picked = await showTimePicker(
+                        context: context,
+                        initialTime:
+                            time ?? const TimeOfDay(hour: 8, minute: 0),
+                      );
+                      if (picked != null) {
+                        await saveDailyReminderTime(ref, picked);
+                        await NotificationService.instance
+                            .scheduleDailyReadingReminder(picked);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Reminder set for ${picked.format(context)}',
+                              ),
+                            ),
+                          );
+                        }
+                      }
+                    },
+                  ),
+                  loading: () =>
+                      const ListTile(title: Text('Loading reminder')),
+                  error: (_, _) =>
+                      const ListTile(title: Text('Error loading reminder')),
+                );
+              },
+            ),
+            TextButton(
+              onPressed: () => context.push('/notifications'),
+              child: const Text('Open Notification Settings'),
+            ),
+            const SizedBox(height: AppSpacing.spaceXL),
+            Text('About', style: AppTypography.titleMedium),
+            const SizedBox(height: AppSpacing.spaceSM),
+            Text(
+              'Deen is free forever, no ads, offline first. Your data stays on your device.',
+              style: AppTypography.bodySmall,
+            ),
+            const SizedBox(height: AppSpacing.spaceLG),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () => context.push('/support'),
+                icon: const Icon(Icons.favorite_border),
+                label: const Text('Support the App'),
+              ),
+            ),
+            const Divider(height: AppSpacing.spaceXL),
+            Text('Privacy & Data', style: AppTypography.titleMedium),
+            const SizedBox(height: AppSpacing.spaceSM),
+            analyticsAsync.when(
+              data: (enabled) => SwitchListTile(
+                title: Text(
+                  'Analytics (opt-in)',
+                  style: AppTypography.titleMedium,
+                ),
+                subtitle: Text(
+                  'Minimal, anonymous. Never logs verses read or search text.',
+                  style: AppTypography.bodySmall,
+                ),
+                value: enabled,
+                onChanged: (v) => saveAnalyticsOptIn(ref, v),
+              ),
+              loading: () => const SwitchListTile(
+                title: Text('Analytics (opt-in)'),
+                value: false,
+                onChanged: null,
+              ),
+              error: (_, _) => const Text('Error loading analytics setting'),
+            ),
+            const SizedBox(height: AppSpacing.spaceSM),
+            OutlinedButton.icon(
+              onPressed: () => _exportData(context, ref),
+              icon: const Icon(Icons.download_outlined),
+              label: const Text('Export my data'),
+            ),
+            const SizedBox(height: AppSpacing.spaceSM),
+            OutlinedButton.icon(
+              onPressed: () => _confirmDelete(context, ref),
+              icon: const Icon(Icons.delete_outline, color: Colors.red),
+              label: const Text(
+                'Delete my data',
+                style: TextStyle(color: Colors.red),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

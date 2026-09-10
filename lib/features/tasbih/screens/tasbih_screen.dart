@@ -9,7 +9,8 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_gradients.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
-import '../../../shared/widgets/glass/deen_glass_app_bar.dart';
+import '../../../shared/widgets/chrome/deen_app_bar.dart';
+import '../../../shared/widgets/deen_card.dart';
 import '../../../shared/widgets/icons/deen_symbol_effects.dart';
 import '../../gamification/providers/gamification_providers.dart';
 import '../../../shared/providers/display_providers.dart';
@@ -18,10 +19,10 @@ final tasbihCountProvider = StateProvider<int>((ref) => 0);
 final tasbihTargetProvider = StateProvider<int>((ref) => 33);
 final tasbihRoundsProvider = StateProvider<int>((ref) => 0);
 
-/// Design v5 Tasbih: gradient displayNumerals counter, rounds, target
-/// chips directly under the counter, thin progress, goldFlow orb with a
-/// progress ring and tap bounce, reset button. Adaptive via Flexible,
-/// FittedBox and LayoutBuilder (no fixed heights). Haptics unchanged.
+/// Design v6 Tasbih: night top band (gold counter, rounds, chips,
+/// progress), cream middle zone with glow-backed orb filling the space,
+/// hint pinned above the dock. Adaptive via Flexible, FittedBox and
+/// LayoutBuilder (no fixed heights). Haptics unchanged.
 class TasbihScreen extends ConsumerWidget {
   const TasbihScreen({super.key});
 
@@ -59,12 +60,19 @@ class TasbihScreen extends ConsumerWidget {
     final rounds = ref.watch(tasbihRoundsProvider);
     final elderly = ref.watch(elderlyModeProvider).valueOrNull ?? false;
     final progress = target == 0 ? 0.0 : (count / target).clamp(0.0, 1.0);
+    // Hint sits 12dp above the floating dock (dock height + bottom margin).
+    final dockClearance =
+        AppSpacing.navHeight +
+        (MediaQuery.viewPaddingOf(context).bottom > 12
+            ? MediaQuery.viewPaddingOf(context).bottom
+            : 12) +
+        12;
 
     return Scaffold(
       // Non-scrolling screen: no extendBodyBehindAppBar (top-leak rule).
       backgroundColor: Colors.transparent,
       extendBody: true,
-      appBar: const DeenGlassAppBar(title: 'Tasbih'),
+      appBar: const DeenAppBar(title: 'Tasbih'),
       body: Stack(
         children: [
           Positioned.fill(
@@ -74,171 +82,215 @@ class TasbihScreen extends ConsumerWidget {
               ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(AppSpacing.spaceMD),
-            child: Column(
-              children: [
-                // Gradient counter with overflow-safe fit.
-                Semantics(
-                  key: const ValueKey('tasbih-counter'),
-                  label: 'Tasbih count',
-                  value: '$count of $target',
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: ShaderMask(
-                      blendMode: BlendMode.srcIn,
-                      shaderCallback: (bounds) =>
-                          AppGradients.goldFlow.createShader(bounds),
-                      child: Text(
-                        '$count',
-                        key: ValueKey<int>(count),
-                        style: AppTypography.displayNumerals.copyWith(
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
+          Column(
+            children: [
+              // ZONE 1: night top band with gold counter, rounds, chips.
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.spaceMD,
+                  AppSpacing.spaceMD,
+                  AppSpacing.spaceMD,
+                  AppSpacing.spaceMD,
+                ),
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF191410), Color(0xFF2A2018)],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
                   ),
                 ),
-                Text(
-                  'Rounds: $rounds',
-                  style: AppTypography.labelSmall.copyWith(
-                    color: AppColors.textMuted,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.spaceSM),
-                // Target chips directly under the counter.
-                Semantics(
-                  label: 'Counter target',
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [33, 99, 100].map((t) {
-                      final selected = target == t;
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.spaceXS,
-                        ),
-                        child: ChoiceChip(
-                          label: Text('$t'),
-                          selected: selected,
-                          selectedColor: AppColors.gold,
-                          labelStyle: AppTypography.labelMedium.copyWith(
-                            color: selected
-                                ? Colors.white
-                                : AppColors.textMuted,
+                child: Column(
+                  children: [
+                    Semantics(
+                      key: const ValueKey('tasbih-counter'),
+                      label: 'Tasbih count',
+                      value: '$count of $target',
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          '$count',
+                          key: ValueKey<int>(count),
+                          style: AppTypography.displayNumerals.copyWith(
+                            color: AppColors.gold,
                           ),
-                          onSelected: (_) {
-                            ref.read(tasbihTargetProvider.notifier).state = t;
-                            ref.read(tasbihCountProvider.notifier).state = 0;
-                          },
                         ),
-                      );
-                    }).toList(),
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.spaceSM),
-                Semantics(
-                  excludeSemantics: true,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-                    child: LinearProgressIndicator(
-                      value: progress,
-                      backgroundColor: isDark
-                          ? AppColors.darkOutlineVariant
-                          : AppColors.creamDark,
-                      valueColor: const AlwaysStoppedAnimation<Color>(
-                        AppColors.gold,
                       ),
-                      minHeight: 6,
                     ),
-                  ),
+                    Text(
+                      'Rounds: $rounds',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: const Color(0xFFC9BBA8),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.spaceSM),
+                    Semantics(
+                      label: 'Counter target',
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [33, 99, 100].map((t) {
+                          final selected = target == t;
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.spaceXS,
+                            ),
+                            child: ChoiceChip(
+                              label: Text('$t'),
+                              selected: selected,
+                              selectedColor: AppColors.gold,
+                              // Compact so the band fits short landscape.
+                              visualDensity: const VisualDensity(
+                                horizontal: 0,
+                                vertical: -4,
+                              ),
+                              materialTapTargetSize:
+                                  MaterialTapTargetSize.shrinkWrap,
+                              labelStyle: AppTypography.labelMedium.copyWith(
+                                color: selected
+                                    ? Colors.white
+                                    : const Color(0xFFC9BBA8),
+                              ),
+                              onSelected: (_) {
+                                ref.read(tasbihTargetProvider.notifier).state =
+                                    t;
+                                ref.read(tasbihCountProvider.notifier).state =
+                                    0;
+                              },
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.spaceSM),
+                    Semantics(
+                      excludeSemantics: true,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.radiusFull,
+                        ),
+                        child: LinearProgressIndicator(
+                          value: progress,
+                          backgroundColor: Colors.white.withValues(alpha: 0.15),
+                          valueColor: const AlwaysStoppedAnimation<Color>(
+                            AppColors.gold,
+                          ),
+                          minHeight: 6,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                // Adaptive orb zone: shrinks on short screens/landscape.
-                Flexible(
-                  flex: 3,
+              ),
+              // ZONE 2: cream middle; orb fills the available space.
+              Expanded(
+                child: Container(
+                  width: double.infinity,
+                  color: isDark ? null : AppColors.cream,
                   child: LayoutBuilder(
                     builder: (context, constraints) {
-                      final orbSize = math.min(
-                        200.0,
-                        math.min(
-                          constraints.maxWidth - 32,
-                          constraints.maxHeight - 32,
-                        ),
-                      );
+                      // No floor: on short screens (landscape) the orb yields
+                      // instead of overflowing; the zone absorbs the slack.
+                      final orbSize =
+                          (math.min(
+                                    constraints.maxWidth,
+                                    constraints.maxHeight,
+                                  ) *
+                                  0.75)
+                              .clamp(0.0, 260.0);
                       return Center(
-                        child: Semantics(
-                          button: true,
-                          label: 'Tasbih counter',
-                          value: '$count of $target, $rounds rounds completed',
-                          child: GestureDetector(
-                            onTap: () => _tap(context, ref),
-                            child: DeenAnimatedIcon(
-                              effect: DeenSymbolEffect.bounce,
-                              replayKey: count,
-                              child: CustomPaint(
-                                painter: _ProgressRingPainter(
-                                  progress: progress,
-                                  isDark: isDark,
-                                ),
-                                child: Container(
-                                  width: orbSize,
-                                  height: orbSize,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    gradient: AppGradients.goldFlow,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: elderly
-                                            ? Colors.black.withValues(
-                                                alpha: 0.12,
-                                              )
-                                            : AppColors.gold.withValues(
-                                                alpha: 0.32,
-                                              ),
-                                        blurRadius: elderly ? 8 : 18,
-                                        offset: const Offset(0, 6),
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            DeenGlowSpot(diameter: orbSize + 80),
+                            Semantics(
+                              button: true,
+                              label: 'Tasbih counter',
+                              value:
+                                  '$count of $target, $rounds rounds completed',
+                              child: GestureDetector(
+                                onTap: () => _tap(context, ref),
+                                child: DeenAnimatedIcon(
+                                  effect: DeenSymbolEffect.bounce,
+                                  replayKey: count,
+                                  child: CustomPaint(
+                                    painter: _ProgressRingPainter(
+                                      progress: progress,
+                                      isDark: isDark,
+                                    ),
+                                    child: Container(
+                                      width: orbSize,
+                                      height: orbSize,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        gradient: AppGradients.goldFlow,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: elderly
+                                                ? Colors.black.withValues(
+                                                    alpha: 0.12,
+                                                  )
+                                                : AppColors.gold.withValues(
+                                                    alpha: 0.32,
+                                                  ),
+                                            blurRadius: elderly ? 8 : 18,
+                                            offset: const Offset(0, 6),
+                                          ),
+                                        ],
                                       ),
-                                    ],
-                                  ),
-                                  child: const Icon(
-                                    Icons.touch_app,
-                                    size: 64,
-                                    color: Colors.white,
+                                      child: const Icon(
+                                        Icons.touch_app,
+                                        size: 64,
+                                        color: Colors.white,
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
-                          ),
+                          ],
                         ),
                       );
                     },
                   ),
                 ),
-                Text(
-                  'Tap the circle to count',
-                  style: AppTypography.bodySmall.copyWith(
-                    color: AppColors.textMuted,
-                  ),
+              ),
+              // ZONE 3: hint pinned above the dock (no empty region below).
+              Padding(
+                padding: EdgeInsets.only(bottom: dockClearance),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Tap the circle to count',
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.textMuted,
+                      ),
+                    ),
+                    Semantics(
+                      button: true,
+                      label: 'Reset counter',
+                      child: TextButton(
+                        onPressed: () =>
+                            ref.read(tasbihCountProvider.notifier).state = 0,
+                        style: TextButton.styleFrom(
+                          visualDensity: VisualDensity.compact,
+                          minimumSize: const Size(0, 32),
+                        ),
+                        child: const Text('Reset'),
+                      ),
+                    ),
+                    Text(
+                      'Counts are encouragement only; true reward is with Allah.',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: AppColors.textMuted,
+                        fontStyle: FontStyle.italic,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
                 ),
-                Semantics(
-                  button: true,
-                  label: 'Reset counter',
-                  child: TextButton(
-                    onPressed: () =>
-                        ref.read(tasbihCountProvider.notifier).state = 0,
-                    child: const Text('Reset'),
-                  ),
-                ),
-                Text(
-                  'Counts are encouragement only; true reward is with Allah.',
-                  style: AppTypography.labelSmall.copyWith(
-                    color: AppColors.textMuted,
-                    fontStyle: FontStyle.italic,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: AppSpacing.spaceMD),
-              ],
-            ),
+              ),
+            ],
           ),
         ],
       ),

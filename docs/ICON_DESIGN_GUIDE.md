@@ -1,6 +1,6 @@
 # Icon Design Guide - Deen
 
-Founder-crafted SVG registry. Replace any placeholder in `assets/icons/` with final artwork - zero code changes required.
+SVG registry: 31 Lucide library glyphs (ISC, stroke-normalized to 1.8) plus a 10-icon custom identity set. Any icon can be elevated to founder-crafted later by replacing its SVG file with no code change.
 
 ## Spec
 
@@ -23,51 +23,55 @@ DeenGradientIcon(asset: DeenIcons.ic_quran, gradient: AppGradients.goldFlow)
 
 Selected nav icons use `DeenGradientIcon` with `AppGradients.goldFlow 135deg`, unselected use muted `AppColors.textMuted` / dark `0xFF9E9589`.
 
-## Inventory (41 placeholders awaiting founder artwork)
+## Inventory (41 icons: 31 library, 10 custom)
 
-| Name | File | Description | Status |
-|------|------|-------------|--------|
-| ic_home | ic_home.svg | House outline | placeholder |
-| ic_quran | ic_quran.svg | Book | placeholder |
-| ic_qibla | ic_qibla.svg | Compass | placeholder |
-| ic_tasbih | ic_tasbih.svg | Circle with dot | placeholder |
-| ic_settings | ic_settings.svg | Gear | placeholder |
-| ic_search | ic_search.svg | Magnifier | placeholder |
-| ic_bookmark | ic_bookmark.svg | Ribbon outline | placeholder |
-| ic_bookmark_filled | ic_bookmark_filled.svg | Ribbon solid | placeholder |
-| ic_share | ic_share.svg | Arrow box | placeholder |
-| ic_close | ic_close.svg | X | placeholder |
-| ic_back | ic_back.svg | Chevron left | placeholder |
-| ic_copy | ic_copy.svg | Docs | placeholder |
-| ic_external | ic_external.svg | Arrow out | placeholder |
-| ic_play | ic_play.svg | Triangle | placeholder |
-| ic_pause | ic_pause.svg | Bars | placeholder |
-| ic_speed | ic_speed.svg | Gauge | placeholder |
-| ic_next | ic_next.svg | Chevron right | placeholder |
-| ic_prev | ic_prev.svg | Chevron left small | placeholder |
-| ic_fajr | ic_fajr.svg | Dawn | placeholder |
-| ic_sunrise | ic_sunrise.svg | Sunrise | placeholder |
-| ic_dhuhr | ic_dhuhr.svg | Sun overhead | placeholder |
-| ic_asr | ic_asr.svg | Sun afternoon | placeholder |
-| ic_maghrib | ic_maghrib.svg | Sunset | placeholder |
-| ic_isha | ic_isha.svg | Moon | placeholder |
-| ic_location | ic_location.svg | Pin | placeholder |
-| ic_bell | ic_bell.svg | Bell | placeholder |
-| ic_clock | ic_clock.svg | Clock | placeholder |
-| ic_streak | ic_streak.svg | Flame | placeholder |
-| ic_freeze | ic_freeze.svg | Snowflake | placeholder |
-| ic_hasanat | ic_hasanat.svg | Star | placeholder |
-| ic_target | ic_target.svg | Crosshair | placeholder |
-| ic_trophy | ic_trophy.svg | Cup | placeholder |
-| ic_badge_star | ic_badge_star.svg | Badge star | placeholder |
-| ic_family | ic_family.svg | Users | placeholder |
-| ic_invite | ic_invite.svg | Mail | placeholder |
-| ic_heart | ic_heart.svg | Heart | placeholder |
-| ic_check | ic_check.svg | Check | placeholder |
-| ic_chevron_right | ic_chevron_right.svg | Chevron right | placeholder |
-| ic_chevron_left | ic_chevron_left.svg | Chevron left | placeholder |
-| ic_moon | ic_moon.svg | Moon | placeholder |
-| ic_sun | ic_sun.svg | Sun | placeholder |
+Provenance `library` = Lucide (ISC, stroke-normalized 1.8). Provenance `custom` = original Deen identity set. Any row can be elevated to founder-crafted later by replacing its SVG file with no code change.
+
+Footnote: the filled variant (`ic_bookmark_filled.svg`) carries an inert `stroke-width` attribute alongside `stroke="none"` by design; verification expects 41 files with the attribute, not 40.
+
+| Name | File | Description | Provenance | Status |
+|------|------|-------------|------------|--------|
+| ic_home | ic_home.svg | House outline (Lucide house) | library | library-v1 |
+| ic_quran | ic_quran.svg | Book open | library | library-v1 |
+| ic_qibla | ic_qibla.svg | Compass needle in circle | custom | custom-v1 |
+| ic_tasbih | ic_tasbih.svg | Bead circle with strand | custom | custom-v1 |
+| ic_settings | ic_settings.svg | Gear | library | library-v1 |
+| ic_search | ic_search.svg | Magnifier | library | library-v1 |
+| ic_bookmark | ic_bookmark.svg | Ribbon outline | library | library-v1 |
+| ic_bookmark_filled | ic_bookmark_filled.svg | Ribbon solid | library | library-v1 |
+| ic_share | ic_share.svg | Arrow box | library | library-v1 |
+| ic_close | ic_close.svg | X | library | library-v1 |
+| ic_back | ic_back.svg | Arrow left | library | library-v1 |
+| ic_copy | ic_copy.svg | Docs | library | library-v1 |
+| ic_external | ic_external.svg | Arrow out | library | library-v1 |
+| ic_play | ic_play.svg | Triangle | library | library-v1 |
+| ic_pause | ic_pause.svg | Bars | library | library-v1 |
+| ic_speed | ic_speed.svg | Gauge | library | library-v1 |
+| ic_next | ic_next.svg | Skip forward | library | library-v1 |
+| ic_prev | ic_prev.svg | Skip back | library | library-v1 |
+| ic_fajr | ic_fajr.svg | Dawn horizon | custom | custom-v1 |
+| ic_sunrise | ic_sunrise.svg | Sunrise arrow up | custom | custom-v1 |
+| ic_dhuhr | ic_dhuhr.svg | Sun overhead full rays | custom | custom-v1 |
+| ic_asr | ic_asr.svg | Sun low partial rays | custom | custom-v1 |
+| ic_maghrib | ic_maghrib.svg | Sunset arrow down | custom | custom-v1 |
+| ic_isha | ic_isha.svg | Crescent moon and star | custom | custom-v1 |
+| ic_location | ic_location.svg | Pin | library | library-v1 |
+| ic_bell | ic_bell.svg | Bell | library | library-v1 |
+| ic_clock | ic_clock.svg | Clock | library | library-v1 |
+| ic_streak | ic_streak.svg | Flame | library | library-v1 |
+| ic_freeze | ic_freeze.svg | Snowflake | library | library-v1 |
+| ic_hasanat | ic_hasanat.svg | Four-point sparkle | custom | custom-v1 |
+| ic_target | ic_target.svg | Crosshair | library | library-v1 |
+| ic_trophy | ic_trophy.svg | Cup | library | library-v1 |
+| ic_badge_star | ic_badge_star.svg | Eight-point star badge | custom | custom-v1 |
+| ic_family | ic_family.svg | Users | library | library-v1 |
+| ic_invite | ic_invite.svg | User plus | library | library-v1 |
+| ic_heart | ic_heart.svg | Heart | library | library-v1 |
+| ic_check | ic_check.svg | Check | library | library-v1 |
+| ic_chevron_right | ic_chevron_right.svg | Chevron right | library | library-v1 |
+| ic_chevron_left | ic_chevron_left.svg | Chevron left | library | library-v1 |
+| ic_moon | ic_moon.svg | Moon | library | library-v1 |
+| ic_sun | ic_sun.svg | Sun | library | library-v1 |
 
 ## Drop-in workflow
 

@@ -5,7 +5,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../providers/display_providers.dart';
-import '../glass/deen_gradient_icon.dart';
+import '../chrome/deen_gradient_icon.dart';
 
 /// Symbol Effects runtime (Design v5).
 ///
@@ -65,11 +65,15 @@ class DeenAnimatedIcon extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Conservative default: render static until the preference resolves.
+    // A null (still loading) elderly state must never start motion that a
+    // post-frame rebuild would then tear down.
+    final resolvedNonElderly =
+        ref.watch(elderlyModeProvider).valueOrNull == false;
     final child = semanticLabel == null
         ? _staticIcon()
         : Semantics(label: semanticLabel, child: _staticIcon());
-    final elderly = ref.watch(elderlyModeProvider).valueOrNull ?? false;
-    if (elderly || effect == DeenSymbolEffect.none) return child;
+    if (!resolvedNonElderly || effect == DeenSymbolEffect.none) return child;
 
     switch (effect) {
       case DeenSymbolEffect.none:

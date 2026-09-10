@@ -4,7 +4,7 @@ import 'app_colors.dart';
 
 /// Design System v3 canvas backgrounds (DEEN 8.2).
 ///
-/// Paint-only layers: opaque multi-stop gradients, zero BackdropFilter.
+/// Paint-only layers: opaque multi-stop gradients, no blur primitives.
 /// Each factory returns one [BoxDecoration]; the screen paints it on a
 /// full-bleed Container behind scrolling content (Scaffold background
 /// transparent, extendBody true). Gradient stops encode the described

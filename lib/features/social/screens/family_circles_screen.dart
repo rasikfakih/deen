@@ -6,7 +6,8 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/screen_insets.dart';
-import '../../../shared/widgets/glass/deen_glass_app_bar.dart';
+import '../../../shared/widgets/chrome/deen_app_bar.dart';
+import '../../../shared/widgets/chrome/deen_chrome.dart';
 import '../providers/social_providers.dart';
 
 class FamilyCirclesScreen extends ConsumerStatefulWidget {
@@ -94,127 +95,131 @@ class _FamilyCirclesScreenState extends ConsumerState<FamilyCirclesScreen> {
       backgroundColor: isDark
           ? AppColors.darkBackgroundSemantic
           : AppColors.lightBackground,
-      appBar: const DeenGlassAppBar(title: 'Family Circles'),
-      body: ListView(
-        padding: EdgeInsets.fromLTRB(
-          AppSpacing.spaceMD,
-          topContentPad(context),
-          AppSpacing.spaceMD,
-          100,
-        ),
-        children: [
-          Text('Create a circle', style: AppTypography.titleMedium),
-          const SizedBox(height: AppSpacing.spaceSM),
-          TextField(
-            controller: _createController,
-            decoration: const InputDecoration(
-              labelText: 'Circle name',
-              border: OutlineInputBorder(),
-              hintText: 'e.g. Family',
-            ),
+      appBar: const DeenAppBar(title: 'Family Circles'),
+      body: DeenChromeListener(
+        child: ListView(
+          padding: EdgeInsets.fromLTRB(
+            AppSpacing.spaceMD,
+            topContentPad(context),
+            AppSpacing.spaceMD,
+            100,
           ),
-          const SizedBox(height: AppSpacing.spaceSM),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: _isLoading ? null : _createCircle,
-              child: Text(_isLoading ? 'Creating...' : 'Create Circle'),
-            ),
-          ),
-          if (_createdInviteCode != null) ...[
+          children: [
+            Text('Create a circle', style: AppTypography.titleMedium),
             const SizedBox(height: AppSpacing.spaceSM),
-            Container(
-              padding: const EdgeInsets.all(AppSpacing.spaceMD),
-              decoration: BoxDecoration(
-                color: isDark ? AppColors.darkSurface : Colors.white,
-                borderRadius: BorderRadius.circular(AppSpacing.radiusMD),
-                border: Border.all(color: AppColors.gold),
+            TextField(
+              controller: _createController,
+              decoration: const InputDecoration(
+                labelText: 'Circle name',
+                border: OutlineInputBorder(),
+                hintText: 'e.g. Family',
               ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Invite code',
-                          style: AppTypography.labelSmall.copyWith(
-                            color: AppColors.textMuted,
+            ),
+            const SizedBox(height: AppSpacing.spaceSM),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _isLoading ? null : _createCircle,
+                child: Text(_isLoading ? 'Creating...' : 'Create Circle'),
+              ),
+            ),
+            if (_createdInviteCode != null) ...[
+              const SizedBox(height: AppSpacing.spaceSM),
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.spaceMD),
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.darkSurface : Colors.white,
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMD),
+                  border: Border.all(color: AppColors.gold),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Invite code',
+                            style: AppTypography.labelSmall.copyWith(
+                              color: AppColors.textMuted,
+                            ),
                           ),
-                        ),
-                        SelectableText(
-                          _createdInviteCode!,
-                          style: AppTypography.titleLarge.copyWith(
-                            letterSpacing: 2,
+                          SelectableText(
+                            _createdInviteCode!,
+                            style: AppTypography.titleLarge.copyWith(
+                              letterSpacing: 2,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.copy),
-                    onPressed: () async {
-                      await Clipboard.setData(
-                        ClipboardData(text: _createdInviteCode!),
-                      );
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Invite code copied')),
+                    IconButton(
+                      icon: const Icon(Icons.copy),
+                      onPressed: () async {
+                        await Clipboard.setData(
+                          ClipboardData(text: _createdInviteCode!),
                         );
-                      }
-                    },
-                  ),
-                ],
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Invite code copied')),
+                          );
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            const SizedBox(height: AppSpacing.spaceLG),
+            Text('Join a circle', style: AppTypography.titleMedium),
+            const SizedBox(height: AppSpacing.spaceSM),
+            TextField(
+              controller: _joinController,
+              decoration: const InputDecoration(
+                labelText: 'Invite code (6 chars)',
+                border: OutlineInputBorder(),
+              ),
+              maxLength: 6,
+              textCapitalization: TextCapitalization.characters,
+            ),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _isLoading ? null : _joinCircle,
+                child: const Text('Join Circle'),
               ),
             ),
-          ],
-          const SizedBox(height: AppSpacing.spaceLG),
-          Text('Join a circle', style: AppTypography.titleMedium),
-          const SizedBox(height: AppSpacing.spaceSM),
-          TextField(
-            controller: _joinController,
-            decoration: const InputDecoration(
-              labelText: 'Invite code (6 chars)',
-              border: OutlineInputBorder(),
-            ),
-            maxLength: 6,
-            textCapitalization: TextCapitalization.characters,
-          ),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: _isLoading ? null : _joinCircle,
-              child: const Text('Join Circle'),
-            ),
-          ),
-          const SizedBox(height: AppSpacing.spaceSM),
-          if (_statusMessage != null)
+            const SizedBox(height: AppSpacing.spaceSM),
+            if (_statusMessage != null)
+              Text(
+                _statusMessage!,
+                style: AppTypography.bodySmall.copyWith(
+                  color: AppColors.textMuted,
+                ),
+              ),
+            const SizedBox(height: AppSpacing.spaceLG),
+            Text('Leaderboard', style: AppTypography.titleMedium),
+            const SizedBox(height: AppSpacing.spaceSM),
             Text(
-              _statusMessage!,
+              'Per-member minutes, streaks, and hasanat. Private to your circle only.',
               style: AppTypography.bodySmall.copyWith(
                 color: AppColors.textMuted,
               ),
             ),
-          const SizedBox(height: AppSpacing.spaceLG),
-          Text('Leaderboard', style: AppTypography.titleMedium),
-          const SizedBox(height: AppSpacing.spaceSM),
-          Text(
-            'Per-member minutes, streaks, and hasanat. Private to your circle only.',
-            style: AppTypography.bodySmall.copyWith(color: AppColors.textMuted),
-          ),
-          const SizedBox(height: AppSpacing.spaceSM),
-          if (_selectedCircleId != null)
-            _LeaderboardSection(circleId: _selectedCircleId!),
-          const SizedBox(height: AppSpacing.spaceLG),
-          Text(
-            'Counts are encouragement only; true reward is with Allah.',
-            style: AppTypography.labelSmall.copyWith(
-              fontStyle: FontStyle.italic,
-              color: AppColors.textMuted,
+            const SizedBox(height: AppSpacing.spaceSM),
+            if (_selectedCircleId != null)
+              _LeaderboardSection(circleId: _selectedCircleId!),
+            const SizedBox(height: AppSpacing.spaceLG),
+            Text(
+              'Counts are encouragement only; true reward is with Allah.',
+              style: AppTypography.labelSmall.copyWith(
+                fontStyle: FontStyle.italic,
+                color: AppColors.textMuted,
+              ),
+              textAlign: TextAlign.center,
             ),
-            textAlign: TextAlign.center,
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
